@@ -1,0 +1,16 @@
+# Configuração local do CLI Supabase — projeto Construtora Moana.
+# Não versionar senhas. O project_id é o ref público do projeto.
+
+project_id = "dqmxwaoynkfgopmyxcvo"
+
+[api]
+enabled = true
+schemas = ["public"]
+
+[db]
+major_version = 17
+
+[auth]
+enabled = true
+site_url = "http://localhost:3000"
+additional_redirect_urls = ["http://localhost:3000"]

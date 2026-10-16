@@ -1,0 +1,16 @@
+.env
+.env.*
+!.env.example
+.runtime-auth-secret
+.next
+node_modules
+*.zip
+*.log
+.DS_Store
+.git
+.agents
+.codex
+AUDITORIA_*.md
+DEPLOY_STATUS.txt
+IMPORT_RESULTADO.md
+SECURITY_AUDIT_*.md
