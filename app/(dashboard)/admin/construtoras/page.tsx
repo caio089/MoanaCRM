@@ -3,7 +3,8 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { ProtectedAdminRoute } from '@/components/layout/ProtectedAdminRoute'
 import { PageHeading } from '@/components/ui/PageHeading'
-import { TextInput } from '@/components/forms/FormField'
+import { Select, TextInput } from '@/components/forms/FormField'
+import { ORIGENS_CATALOGO } from '@/lib/constants/operacao'
 import {
   createConstrutora,
   deactivateConstrutora,
@@ -32,6 +33,7 @@ function ConstrutoraForm({
 }) {
   const [nome, setNome] = useState(initial?.nome ?? '')
   const [cidade, setCidade] = useState(initial?.cidade ?? '')
+  const [origemCatalogo, setOrigemCatalogo] = useState(initial?.origemCatalogo ?? 'parceira')
   const [ativo, setAtivo] = useState(initial?.ativo ?? true)
   const [fieldError, setFieldError] = useState<string | null>(null)
 
@@ -46,6 +48,7 @@ function ConstrutoraForm({
       nome: nome.trim(),
       cidade: cidade.trim() || null,
       ativo,
+      origemCatalogo: origemCatalogo === 'proprio' ? 'proprio' : 'parceira',
     })
   }
 
@@ -65,6 +68,12 @@ function ConstrutoraForm({
         value={cidade}
         onChange={(e) => setCidade(e.target.value)}
         placeholder="Ex.: Teresina"
+      />
+      <Select
+        label="Origem do catálogo"
+        value={origemCatalogo}
+        onChange={(e) => setOrigemCatalogo(e.target.value as 'parceira' | 'proprio')}
+        options={ORIGENS_CATALOGO}
       />
       <label className="flex items-center gap-2 text-label-md text-on-surface-variant">
         <input
@@ -214,6 +223,7 @@ export default function ConstrutorasAdminPage() {
               <thead className="border-b border-white/[0.06] bg-white/[0.02] text-label-sm uppercase tracking-[0.12em] text-on-surface-variant">
                 <tr>
                   <th className="px-4 py-3 font-medium">Construtora</th>
+                  <th className="px-4 py-3 font-medium">Origem</th>
                   <th className="px-4 py-3 font-medium">Cidade</th>
                   <th className="px-4 py-3 font-medium">Status</th>
                   <th className="px-4 py-3 font-medium text-right">Ações</th>
@@ -223,6 +233,9 @@ export default function ConstrutorasAdminPage() {
                 {filtered.map((item) => (
                   <tr key={item.id} className="hover:bg-white/[0.02]">
                     <td className="px-4 py-3 font-semibold text-on-surface">{item.nome}</td>
+                    <td className="px-4 py-3 text-on-surface-variant">
+                      {item.origemCatalogo === 'proprio' ? 'Produto próprio' : 'Parceira'}
+                    </td>
                     <td className="px-4 py-3 text-on-surface-variant">{item.cidade || '—'}</td>
                     <td className="px-4 py-3">
                       <span className={item.ativo ? 'text-primary' : 'text-on-surface-variant'}>

@@ -13,6 +13,7 @@ export interface LeadsFilters {
   etapa?: string
   situacao?: string
   origem?: string
+  tipoOperacao?: string
 }
 
 interface PaginationOptions {
@@ -98,7 +99,7 @@ export async function getKanbanLeads(): Promise<KanbanLead[]> {
   try {
     const { data, error } = await supabase
       .from('leads')
-      .select('id, nome, cidade, etapa, corretor, origem, vgv, telefone')
+      .select('id, nome, cidade, etapa, corretor, origem, vgv, telefone, tipo_operacao')
       .order('atualizado_em', { ascending: false })
 
     if (error) throw error
@@ -130,6 +131,7 @@ export async function getLeadsWithFilters(
     if (filters.situacao)
       query = query.eq('situacao_reprovado', filters.situacao)
     if (filters.origem) query = query.eq('origem', filters.origem)
+    if (filters.tipoOperacao) query = query.eq('tipo_operacao', filters.tipoOperacao)
 
     // Filtro por data
     if (filters.dataInicio)

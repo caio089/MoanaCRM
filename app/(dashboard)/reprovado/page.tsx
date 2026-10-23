@@ -7,12 +7,16 @@ import { LeadsTable } from '@/components/dashboard/LeadsTable'
 import { TimelineChart } from '@/components/dashboard/TimelineChart'
 import { FilterBar } from '@/components/dashboard/FilterBar'
 import { PageHeading } from '@/components/ui/PageHeading'
+import { OperacaoToggle } from '@/components/ui/OperacaoToggle'
+import { etapaLabel } from '@/lib/constants/operacao'
+import { useOperacao } from '@/lib/contexts/OperacaoContext'
 import { getLeadsWithFilters, getFilterOptions, getTopByCorretor, getTopByOrigem, getTopByCidade } from '@/lib/services/leads'
 import type { Lead } from '@/lib/types'
 
 const ITEMS_PER_PAGE = 50
 
 export default function ReprovadoPage() {
+  const { tipoOperacao, setTipoOperacao } = useOperacao()
   const [leads, setLeads] = useState<Lead[]>([])
   const [totalLeads, setTotalLeads] = useState(0)
   const [loading, setLoading] = useState(true)
@@ -24,12 +28,18 @@ export default function ReprovadoPage() {
 
   const [filters, setFilters] = useState({
     etapa: 'reprovado' as any,
+    tipoOperacao,
     situacao: undefined,
     corretor: undefined,
     coordenador: undefined,
     construtora: undefined,
     cidade: undefined,
   })
+
+  useEffect(() => {
+    setFilters((prev) => ({ ...prev, tipoOperacao }))
+    setCurrentPage(1)
+  }, [tipoOperacao])
 
   useEffect(() => {
     const loadFilterOptions = async () => {
@@ -68,11 +78,15 @@ export default function ReprovadoPage() {
   return (
     <div className="page-section">
       <PageHeading
-        title="Reprovado"
+        title={etapaLabel('reprovado', tipoOperacao)}
         description="Leads que não avançaram e motivos de recusa."
       />
 
-      <FilterBar filters={filters} onFilterChange={(f: any) => { setFilters({ ...f, etapa: 'reprovado' }); setCurrentPage(1) }} filterOptions={filterOptions} />
+      <div className="card">
+        <OperacaoToggle value={tipoOperacao} onChange={setTipoOperacao} />
+      </div>
+
+      <FilterBar filters={filters} onFilterChange={(f: any) => { setFilters({ ...f, etapa: 'reprovado', tipoOperacao }); setCurrentPage(1) }} filterOptions={filterOptions} />
 
       <MetricsRow metrics={[{ label: 'Quantidade', value: totalLeads }]} />
 

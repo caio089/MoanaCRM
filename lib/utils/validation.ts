@@ -2,6 +2,8 @@
  * Validação de dados de leads
  */
 
+import type { Lead, TipoContrato, TipoOperacao, TitularidadeImovel } from '@/lib/types'
+
 export interface ValidationError {
   field: string
   message: string
@@ -60,6 +62,10 @@ export function validateLead(
     if (!data.origem || !data.origem.trim()) {
       errors.push({ field: 'origem', message: 'Origem é obrigatória' })
     }
+
+    if (data.tipoOperacao !== 'venda' && data.tipoOperacao !== 'aluguel') {
+      errors.push({ field: 'tipoOperacao', message: 'Tipo de operação é obrigatório' })
+    }
   }
 
   if (!data.etapa) {
@@ -69,7 +75,7 @@ export function validateLead(
   return errors
 }
 
-export function normalizeLeadData(data: any) {
+export function normalizeLeadData(data: any): Partial<Lead> {
   const toNumber = (value: unknown): number | null => {
     if (value === '' || value == null) return null
     const n = Number(value)
@@ -106,5 +112,11 @@ export function normalizeLeadData(data: any) {
     faturamentoPrevisto: toNumber(data.faturamentoPrevisto),
     situacaoReprovado: data.situacaoReprovado?.trim() || null,
     ccv: Boolean(data.ccv),
+    tipoOperacao: (data.tipoOperacao === 'aluguel' ? 'aluguel' : 'venda') as TipoOperacao,
+    tipoContrato: (data.tipoContrato?.trim() || null) as TipoContrato | null,
+    valorLocacaoMensal: toNumber(data.valorLocacaoMensal),
+    titularidade: (data.titularidade?.trim() || null) as TitularidadeImovel | null,
+    prazoContratoMeses: toNumber(data.prazoContratoMeses) ?? 12,
+    bairroId: data.bairroId || null,
   }
 }

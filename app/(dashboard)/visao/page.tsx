@@ -6,7 +6,10 @@ import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts'
 import { FilterBar, type FilterBarFilters, type FilterOption } from '@/components/dashboard/FilterBar'
 import { KpiCard } from '@/components/ui/KpiCard'
+import { OperacaoToggle } from '@/components/ui/OperacaoToggle'
 import { PageHeading } from '@/components/ui/PageHeading'
+import { etapaLabel } from '@/lib/constants/operacao'
+import { useOperacao } from '@/lib/contexts/OperacaoContext'
 import { parsePeriodo, PERIODO_LABEL, type PeriodoFiltro } from '@/lib/periodo'
 import {
   getDashboardSummary,
@@ -15,19 +18,15 @@ import {
 import { getTeamHierarchy } from '@/lib/services/team'
 import type { EtapaFunil } from '@/lib/types'
 
-const LABELS: Record<EtapaFunil, string> = {
-  lead: 'Lead',
-  analise: 'Análise',
-  aprovado: 'Aprovado',
-  especulativo: 'Especulativo',
-  realizado: 'Realizado',
-  reprovado: 'Reprovado',
-  visita: 'Visita',
-}
-
-const ETAPAS_OPCOES: FilterOption[] = (
-  Object.entries(LABELS) as Array<[EtapaFunil, string]>
-).map(([value, label]) => ({ value, label }))
+const ETAPAS_FUNIL: EtapaFunil[] = [
+  'lead',
+  'analise',
+  'aprovado',
+  'especulativo',
+  'realizado',
+  'reprovado',
+  'visita',
+]
 
 const CORES: Record<EtapaFunil, string> = {
   lead: '#B8A6D9',
@@ -59,11 +58,16 @@ const EMPTY_SUMMARY: DashboardSummary = {
   topCoordenadores: [],
   topConstrutoras: [],
   clientesRecentes: [],
+  totalVisitas: 0,
+  taxaConversaoVisitas: 0,
+  taxaConversaoLeads: 0,
+  vgaTotal: 0,
+  vgaRealizado: 0,
 }
 
 function parseEtapa(value: string | null): EtapaFunil | undefined {
   if (!value) return undefined
-  return value in LABELS ? (value as EtapaFunil) : undefined
+  return ETAPAS_FUNIL.includes(value as EtapaFunil) ? (value as EtapaFunil) : undefined
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -87,6 +91,7 @@ const CustomYAxisTick = (props: any) => {
 }
 
 export default function VisaoPage() {
+  const { tipoOperacao, setTipoOperacao } = useOperacao()
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
@@ -210,6 +215,7 @@ export default function VisaoPage() {
           coordenadorId,
           corretorId,
           etapa,
+          tipoOperacao,
         })
         if (!cancelled) setSummary(data)
       } catch (err) {
@@ -224,7 +230,7 @@ export default function VisaoPage() {
     return () => {
       cancelled = true
     }
-  }, [periodo, coordenadorId, corretorId, etapa])
+  }, [periodo, coordenadorId, corretorId, etapa, tipoOperacao])
 
   const handleFilterChange = (filters: FilterBarFilters) => {
     // Limpar (clearDefaults / {}) → padrão 30d sem entidade
@@ -284,14 +290,19 @@ export default function VisaoPage() {
             : corrLabel.label
           : 'Todos',
       ],
-      ['Etapa', etapa ? LABELS[etapa] : 'Todas'],
+      ['Operação', tipoOperacao === 'aluguel' ? 'Aluguel' : 'Venda'],
+      ['Etapa', etapa ? etapaLabel(etapa, tipoOperacao) : 'Todas'],
       ['Total de Leads', summary.totalLeads],
       ['Aprovados', summary.totalAprovados],
       ['Realizados', summary.totalRealizados],
       ['Taxa Aprovação', `${summary.taxaAprovacao.toFixed(1)}%`],
       ['Taxa Realização', `${summary.taxaRealizacao.toFixed(1)}%`],
+      ['Fechados / visitas', `${summary.taxaConversaoVisitas.toFixed(1)}%`],
+      ['Fechados / leads', `${summary.taxaConversaoLeads.toFixed(1)}%`],
       ['VGV Total', `R$ ${summary.vgvTotal.toLocaleString('pt-BR')}`],
       ['VGV Realizado', `R$ ${summary.vgvRealizado.toLocaleString('pt-BR')}`],
+      ['VGA Total', `R$ ${summary.vgaTotal.toLocaleString('pt-BR')}`],
+      ['VGA Realizado', `R$ ${summary.vgaRealizado.toLocaleString('pt-BR')}`],
       ['Leads sem corretor', summary.leadsSemCorretor],
       ['Construtoras no período', summary.totalConstrutoras],
       ['Principal construtora', summary.principalConstrutora ?? 'Não informada'],
@@ -330,15 +341,23 @@ export default function VisaoPage() {
     topCoordenadores,
     topConstrutoras,
     clientesRecentes,
+    totalVisitas,
+    taxaConversaoVisitas,
+    taxaConversaoLeads,
+    vgaTotal,
+    vgaRealizado,
   } = summary
 
-  const funil = (Object.entries(LABELS) as Array<[EtapaFunil, string]>).map(
-    ([key, label]) => ({
-      name: label,
-      value: porEtapa[key] || 0,
-      fill: CORES[key],
-    }),
-  )
+  const funil = ETAPAS_FUNIL.map((key) => ({
+    name: etapaLabel(key, tipoOperacao),
+    value: porEtapa[key] || 0,
+    fill: CORES[key],
+  }))
+
+  const etapasOpcoes: FilterOption[] = ETAPAS_FUNIL.map((value) => ({
+    value,
+    label: etapaLabel(value, tipoOperacao),
+  }))
 
   if (loading) {
     return (
@@ -372,6 +391,10 @@ export default function VisaoPage() {
         )}
       />
 
+      <div className="card">
+        <OperacaoToggle value={tipoOperacao} onChange={setTipoOperacao} />
+      </div>
+
       <FilterBar
         filters={barFilters}
         onFilterChange={handleFilterChange}
@@ -382,7 +405,7 @@ export default function VisaoPage() {
         filterOptions={{
           coordenadores: coordOptions,
           corretores: corrOptions,
-          etapas: ETAPAS_OPCOES,
+          etapas: etapasOpcoes,
         }}
       />
 
@@ -391,6 +414,28 @@ export default function VisaoPage() {
         <KpiCard titulo="Total de Leads" valor={totalLeads} accentColor="text-primary" />
         <KpiCard titulo="Aprovados" valor={totalAprovados} accentColor="text-tertiary" />
         <KpiCard titulo="Realizados" valor={totalRealizados} accentColor="text-primary" />
+        <KpiCard
+          titulo="Fechados / visitas"
+          valor={taxaConversaoVisitas}
+          tipo="percentual"
+          subtitulo={`${totalRealizados} em ${totalVisitas} visitas`}
+          accentColor="text-tertiary"
+        />
+        <KpiCard
+          titulo="Fechados / leads"
+          valor={taxaConversaoLeads}
+          tipo="percentual"
+          accentColor="text-tertiary"
+        />
+        {tipoOperacao === 'aluguel' && (
+          <KpiCard
+            titulo="VGA projetado"
+            valor={vgaTotal}
+            tipo="moeda"
+            subtitulo={`Realizado: ${vgaRealizado.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}`}
+            accentColor="text-secondary"
+          />
+        )}
         <KpiCard
           titulo="Construtoras no período"
           valor={totalConstrutoras}
@@ -602,13 +647,13 @@ export default function VisaoPage() {
           Distribuição por etapa
         </p>
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-7">
-          {(Object.entries(LABELS) as Array<[EtapaFunil, string]>).map(([key, label]) => (
+          {ETAPAS_FUNIL.map((key) => (
             <div
               key={key}
               className="rounded-2xl border border-white/[0.05] bg-white/[0.022] px-3 py-5 text-center transition hover:border-primary/15 hover:bg-primary/[0.035]"
             >
               <p className="text-label-sm uppercase tracking-[0.12em] text-on-surface-variant">
-                {label}
+                {etapaLabel(key, tipoOperacao)}
               </p>
               <p className="mt-2 font-display text-3xl text-on-surface">{porEtapa[key] || 0}</p>
             </div>
@@ -644,7 +689,7 @@ export default function VisaoPage() {
                 </p>
               </div>
               <span className="rounded-full border border-white/[0.08] px-2.5 py-1 text-label-sm text-on-surface-variant">
-                {LABELS[lead.etapa]}
+                {etapaLabel(lead.etapa, tipoOperacao)}
               </span>
             </Link>
           ))}

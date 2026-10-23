@@ -8,17 +8,25 @@ import { TextInput, Select, TextArea, Checkbox } from '@/components/forms/FormFi
 import { CorrespondenteSelect } from '@/components/correspondentes/CorrespondenteSelect'
 import { CidadeSelect } from '@/components/cidades/CidadeSelect'
 import { ConstrutoraSelect } from '@/components/construtoras/ConstrutoraSelect'
+import { BairroSelect } from '@/components/bairros/BairroSelect'
+import { OperacaoToggle } from '@/components/ui/OperacaoToggle'
 import { resolveCorrespondenteId } from '@/lib/services/correspondentes'
 import { ORIGENS } from '@/lib/constants/origens'
 import {
   CATEGORIAS_IMOVEL,
   COMPROVACOES,
-  ETAPAS,
   MODALIDADES,
   TIPOS_IMOVEL,
   TIPOS_RENDA,
   ZONAS,
 } from '@/lib/constants/lead-options'
+import {
+  TIPOS_CONTRATO,
+  TITULARIDADES,
+  etapasPorOperacao,
+  type TipoOperacao,
+} from '@/lib/constants/operacao'
+import { calcularVga } from '@/lib/utils/vga'
 import {
   findOptionLabel,
   isTeamUuid,
@@ -93,6 +101,12 @@ export function EditLeadModal({
     observacao: '',
     situacaoReprovado: '',
     ccv: false,
+    tipoOperacao: 'venda' as TipoOperacao,
+    tipoContrato: '',
+    valorLocacaoMensal: '',
+    titularidade: '',
+    prazoContratoMeses: '12',
+    bairroId: '',
   })
 
   // Carregar dados do lead; backfill FK se só houver string legada
@@ -131,6 +145,12 @@ export function EditLeadModal({
       observacao: lead.observacao || '',
       situacaoReprovado: lead.situacaoReprovado || '',
       ccv: lead.ccv || false,
+      tipoOperacao: (lead.tipoOperacao === 'aluguel' ? 'aluguel' : 'venda') as TipoOperacao,
+      tipoContrato: lead.tipoContrato || '',
+      valorLocacaoMensal: lead.valorLocacaoMensal?.toString() || '',
+      titularidade: lead.titularidade || '',
+      prazoContratoMeses: lead.prazoContratoMeses?.toString() || '12',
+      bairroId: lead.bairroId || '',
     }
 
     setFormData(base)
@@ -273,6 +293,12 @@ export function EditLeadModal({
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
+            <OperacaoToggle
+              required
+              value={formData.tipoOperacao}
+              onChange={(tipoOperacao) => setFormData({ ...formData, tipoOperacao })}
+            />
+
             {/* Dados Pessoais */}
             {activeTab === 'personal' && (
               <div className="space-y-4">
@@ -307,13 +333,19 @@ export function EditLeadModal({
                   label="Cidade"
                   required
                   value={formData.cidade}
-                  onChange={(cidade) => setFormData({ ...formData, cidade })}
+                  onChange={(cidade) => setFormData({ ...formData, cidade, bairro: '', bairroId: '' })}
                   error={getError('cidade')}
                 />
-                <TextInput
-                  label="Bairro"
+                <BairroSelect
+                  cidadeNome={formData.cidade}
                   value={formData.bairro}
-                  onChange={(e) => setFormData({ ...formData, bairro: e.target.value })}
+                  bairroId={formData.bairroId}
+                  onChange={(bairro, bairroId) => setFormData({ ...formData, bairro, bairroId })}
+                />
+                <TextInput
+                  label="Bairro (se não estiver no cadastro)"
+                  value={formData.bairro}
+                  onChange={(e) => setFormData({ ...formData, bairro: e.target.value, bairroId: '' })}
                   placeholder="Ex.: Dirceu"
                 />
                 <Select
@@ -364,20 +396,74 @@ export function EditLeadModal({
                   value={formData.chb}
                   onChange={(e) => setFormData({ ...formData, chb: e.target.value })}
                 />
+                {formData.tipoOperacao === 'aluguel' && (
+                  <>
+                    <Select
+                      label="Tipo de contrato"
+                      value={formData.tipoContrato}
+                      onChange={(e) => setFormData({ ...formData, tipoContrato: e.target.value })}
+                      options={TIPOS_CONTRATO}
+                    />
+                    <Select
+                      label="Titularidade do imóvel"
+                      value={formData.titularidade}
+                      onChange={(e) => setFormData({ ...formData, titularidade: e.target.value })}
+                      options={TITULARIDADES}
+                    />
+                  </>
+                )}
               </div>
             )}
 
             {/* Financeiro */}
             {activeTab === 'financial' && (
               <div className="space-y-4">
-                <TextInput
-                  label="VGV"
-                  type="number"
-                  value={formData.vgv}
-                  onChange={(e) => setFormData({ ...formData, vgv: e.target.value })}
-                />
+                {formData.tipoOperacao === 'aluguel' ? (
+                  <>
+                    <TextInput
+                      label="Valor de locação mensal"
+                      type="number"
+                      value={formData.valorLocacaoMensal}
+                      onChange={(e) => setFormData({ ...formData, valorLocacaoMensal: e.target.value })}
+                    />
+                    <TextInput
+                      label="Prazo do contrato (meses)"
+                      type="number"
+                      value={formData.prazoContratoMeses}
+                      onChange={(e) => setFormData({ ...formData, prazoContratoMeses: e.target.value })}
+                    />
+                    {(() => {
+                      const vga = calcularVga({
+                        valorAvaliacao: Number(formData.valorAvaliacao) || 0,
+                        valorLocacaoMensal: Number(formData.valorLocacaoMensal) || 0,
+                        prazoContratoMeses: Number(formData.prazoContratoMeses) || 12,
+                      })
+                      return (
+                        <div className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3">
+                          <p className="text-label-sm uppercase tracking-[0.14em] text-on-surface-variant">VGA</p>
+                          <p className="mt-1 font-display text-2xl text-on-surface">
+                            R$ {vga.receitaProjetada.toLocaleString('pt-BR')}
+                          </p>
+                          <p className="mt-1 text-body-md text-on-surface-variant">
+                            Receita projetada ({vga.prazoMeses} meses)
+                            {vga.rentabilidadeBruta != null
+                              ? ` · rentabilidade bruta ${vga.rentabilidadeBruta.toFixed(1)}%`
+                              : ''}
+                          </p>
+                        </div>
+                      )
+                    })()}
+                  </>
+                ) : (
+                  <TextInput
+                    label="VGV"
+                    type="number"
+                    value={formData.vgv}
+                    onChange={(e) => setFormData({ ...formData, vgv: e.target.value })}
+                  />
+                )}
                 <Select
-                  label="Modalidade de Financiamento"
+                  label={formData.tipoOperacao === 'aluguel' ? 'Modalidade' : 'Modalidade de Financiamento'}
                   value={formData.modalidade}
                   onChange={(e) => setFormData({ ...formData, modalidade: e.target.value })}
                   options={MODALIDADES}
@@ -413,7 +499,7 @@ export function EditLeadModal({
                   required
                   value={formData.etapa}
                   onChange={(e) => setFormData({ ...formData, etapa: e.target.value })}
-                  options={ETAPAS}
+                  options={etapasPorOperacao(formData.tipoOperacao)}
                   error={getError('etapa')}
                 />
                   <Select

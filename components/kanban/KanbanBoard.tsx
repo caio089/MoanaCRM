@@ -3,6 +3,7 @@
 import { useMemo } from 'react'
 import { formatBRLCompact } from '@/lib/formatters'
 import { WhatsAppButton } from '@/components/ui/WhatsAppButton'
+import { etapaDescricaoKanban, etapaLabel, type TipoOperacao } from '@/lib/constants/operacao'
 import type { EtapaFunil, KanbanLead } from '@/lib/types'
 
 interface StageConfig {
@@ -14,69 +15,70 @@ interface StageConfig {
   countClass: string
 }
 
-export const KANBAN_STAGES: StageConfig[] = [
-  {
-    id: 'lead',
-    label: 'Novos leads',
-    description: 'Primeiro contato',
+const STAGE_STYLE: Record<EtapaFunil, Omit<StageConfig, 'id' | 'label' | 'description'>> = {
+  lead: {
     dotClass: 'bg-secondary',
     accentClass: 'from-secondary/20',
     countClass: 'bg-secondary/15 text-secondary',
   },
-  {
-    id: 'analise',
-    label: 'Em análise',
-    description: 'Documentação e perfil',
+  analise: {
     dotClass: 'bg-amber-300',
     accentClass: 'from-amber-300/20',
     countClass: 'bg-amber-300/15 text-amber-200',
   },
-  {
-    id: 'aprovado',
-    label: 'Aprovados',
-    description: 'Crédito liberado',
+  aprovado: {
     dotClass: 'bg-tertiary',
     accentClass: 'from-tertiary/20',
     countClass: 'bg-tertiary/15 text-tertiary',
   },
-  {
-    id: 'visita',
-    label: 'Visitas',
-    description: 'Imóvel em avaliação',
+  visita: {
     dotClass: 'bg-sky-300',
     accentClass: 'from-sky-300/20',
     countClass: 'bg-sky-300/15 text-sky-200',
   },
-  {
-    id: 'especulativo',
-    label: 'Especulativos',
-    description: 'Oportunidade futura',
+  especulativo: {
     dotClass: 'bg-primary',
     accentClass: 'from-primary/20',
     countClass: 'bg-primary/15 text-primary',
   },
-  {
-    id: 'realizado',
-    label: 'Realizados',
-    description: 'Venda concluída',
+  realizado: {
     dotClass: 'bg-emerald-300',
     accentClass: 'from-emerald-300/20',
     countClass: 'bg-emerald-300/15 text-emerald-200',
   },
-  {
-    id: 'reprovado',
-    label: 'Reprovados',
-    description: 'Fora do fluxo ativo',
+  reprovado: {
     dotClass: 'bg-error',
     accentClass: 'from-error/20',
     countClass: 'bg-error/15 text-error',
   },
+}
+
+const STAGE_ORDER: EtapaFunil[] = [
+  'lead',
+  'analise',
+  'aprovado',
+  'visita',
+  'especulativo',
+  'realizado',
+  'reprovado',
 ]
+
+export function kanbanStages(operacao: TipoOperacao = 'venda'): StageConfig[] {
+  return STAGE_ORDER.map((id) => ({
+    id,
+    label: etapaLabel(id, operacao),
+    description: etapaDescricaoKanban(id, operacao),
+    ...STAGE_STYLE[id],
+  }))
+}
+
+export const KANBAN_STAGES: StageConfig[] = kanbanStages('venda')
 
 interface KanbanBoardProps {
   leads: KanbanLead[]
   loading: boolean
   onOpenLead: (leadId: string) => void
+  operacao?: TipoOperacao
 }
 
 function LeadCard({ lead, onOpen }: { lead: KanbanLead; onOpen: (leadId: string) => void }) {
@@ -168,21 +170,22 @@ function KanbanColumn({
   )
 }
 
-export function KanbanBoard({ leads, loading, onOpenLead }: KanbanBoardProps) {
+export function KanbanBoard({ leads, loading, onOpenLead, operacao = 'venda' }: KanbanBoardProps) {
+  const stages = useMemo(() => kanbanStages(operacao), [operacao])
   const leadsByStage = useMemo(() => {
     const grouped = Object.fromEntries(
-      KANBAN_STAGES.map((stage) => [stage.id, [] as KanbanLead[]]),
+      stages.map((stage) => [stage.id, [] as KanbanLead[]]),
     ) as Record<EtapaFunil, KanbanLead[]>
 
-    leads.forEach((lead) => grouped[lead.etapa].push(lead))
+    leads.forEach((lead) => grouped[lead.etapa]?.push(lead))
     return grouped
-  }, [leads])
+  }, [leads, stages])
 
   if (loading) {
     return (
       <div className="flex gap-4 overflow-hidden" role="status" aria-live="polite">
         <span className="sr-only">Carregando quadro Kanban</span>
-        {KANBAN_STAGES.slice(0, 4).map((stage) => (
+        {stages.slice(0, 4).map((stage) => (
           <div key={stage.id} className="h-[34rem] w-[min(20rem,86vw)] shrink-0 animate-pulse rounded-[1.35rem] border border-white/[0.05] bg-white/[0.025]" />
         ))}
       </div>
@@ -194,7 +197,7 @@ export function KanbanBoard({ leads, loading, onOpenLead }: KanbanBoardProps) {
       className="-mx-4 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-4 sm:-mx-7 sm:px-7 lg:-mx-10 lg:px-10 xl:-mx-12 xl:px-12"
       aria-label="Quadro Kanban de leads por etapa"
     >
-      {KANBAN_STAGES.map((stage) => (
+      {stages.map((stage) => (
         <KanbanColumn
           key={stage.id}
           stage={stage}

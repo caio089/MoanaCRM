@@ -10,6 +10,8 @@ import { LeadsTable } from '@/components/dashboard/LeadsTable'
 import { TimelineChart } from '@/components/dashboard/TimelineChart'
 import { FilterBar } from '@/components/dashboard/FilterBar'
 import { PageHeading } from '@/components/ui/PageHeading'
+import { OperacaoToggle } from '@/components/ui/OperacaoToggle'
+import { useOperacao } from '@/lib/contexts/OperacaoContext'
 import { ExportExcelButton } from '@/components/export/ExportExcelButton'
 import {
   getLeadsWithFilters,
@@ -34,6 +36,7 @@ const EditLeadModal = dynamic(
 const ITEMS_PER_PAGE = 50
 
 export default function LeadsPage() {
+  const { tipoOperacao, setTipoOperacao } = useOperacao()
   const searchParams = useSearchParams()
   const { addToast } = useToast()
   const [leads, setLeads] = useState<Lead[]>([])
@@ -58,6 +61,7 @@ export default function LeadsPage() {
     origem: searchParams.get('origem') || undefined,
     dataInicio: searchParams.get('dataInicio') || undefined,
     dataFim: searchParams.get('dataFim') || undefined,
+    tipoOperacao,
   })
 
   const refreshLeads = async () => {
@@ -99,6 +103,11 @@ export default function LeadsPage() {
       throw error
     }
   }
+
+  useEffect(() => {
+    setFilters((prev) => ({ ...prev, tipoOperacao }))
+    setCurrentPage(1)
+  }, [tipoOperacao])
 
   useEffect(() => {
     const loadFilterOptions = async () => {
@@ -208,7 +217,11 @@ export default function LeadsPage() {
         )}
       />
 
-      <FilterBar filters={filters} onFilterChange={(f: any) => { setFilters(f); setCurrentPage(1) }} filterOptions={filterOptions} />
+      <div className="card">
+        <OperacaoToggle value={tipoOperacao} onChange={setTipoOperacao} />
+      </div>
+
+      <FilterBar filters={filters} onFilterChange={(f: any) => { setFilters({ ...f, tipoOperacao }); setCurrentPage(1) }} filterOptions={filterOptions} />
 
       <MetricsRow
         metrics={[

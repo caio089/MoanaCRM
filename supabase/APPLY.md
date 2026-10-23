@@ -10,7 +10,16 @@ O MCP deste workspace só tem permissão na org **CRM vidaelar** (projeto `rkwoh
 1. Abra o [SQL Editor](https://supabase.com/dashboard/project/dqmxwaoynkfgopmyxcvo/sql).
 2. Cole o conteúdo **atualizado** de `schema_complete.sql` e execute (o arquivo anterior quebrava no seed de construtoras por causa de `TEMP TABLE ... ON COMMIT DROP`).
 3. Se o erro `seed_construtoras_planilha` já aconteceu: rode o arquivo de novo inteiro. O script é idempotente no começo (`CREATE TABLE IF NOT EXISTS`).
-4. Confira em Table Editor: `leads`, `coordenadores`, `corretores`, `cidades`, `construtoras`, `correspondentes_bancarios` (vazias de pessoas).
+4. Confira em Table Editor: `leads`, `coordenadores`, `corretores`, `cidades`, `bairros`, `construtoras`, `correspondentes_bancarios` (vazias de pessoas).
+
+## Se o schema base já foi aplicado
+
+Não rode `schema_complete.sql` de novo só por causa do Módulo 2. Cole e execute **apenas** `supabase/migrations/20261022120000_modulo2_aluguel.sql` no SQL Editor. O script é idempotente (`IF NOT EXISTS` / `DROP CONSTRAINT IF EXISTS`).
+
+Depois confira:
+- coluna `leads.tipo_operacao` (default `venda`)
+- tabela `bairros`
+- coluna `construtoras.origem_catalogo`
 
 ## Opção CLI (na conta dona do projeto)
 

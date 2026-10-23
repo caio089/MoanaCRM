@@ -9,6 +9,11 @@ export type EtapaFunil =
   | 'reprovado'
   | 'visita'
 
+export type TipoOperacao = 'venda' | 'aluguel'
+export type TipoContrato = 'locacao' | 'compra_venda' | 'permuta'
+export type TitularidadeImovel = 'construtora' | 'proprio'
+export type OrigemCatalogo = 'parceira' | 'proprio'
+
 export interface Lead extends Record<string, unknown> {
   id: string
   nome: string
@@ -18,6 +23,8 @@ export interface Lead extends Record<string, unknown> {
   cidade: string | null
   zona: string | null
   etapa: EtapaFunil
+  /** Venda (financiamento) ou aluguel (locação). Default: venda. */
+  tipoOperacao?: TipoOperacao
   /** String legada — mantida por 1 release */
   corretor: string | null
   /** String legada — mantida por 1 release */
@@ -53,11 +60,16 @@ export interface Lead extends Record<string, unknown> {
   corretorId?: string | null
   /** FK tipada (nullable) */
   correspondenteId?: string | null
+  tipoContrato?: TipoContrato | null
+  valorLocacaoMensal?: number | null
+  titularidade?: TitularidadeImovel | null
+  prazoContratoMeses?: number | null
+  bairroId?: string | null
 }
 
 export type KanbanLead = Pick<
   Lead,
-  'id' | 'nome' | 'cidade' | 'etapa' | 'corretor' | 'origem' | 'vgv' | 'telefone'
+  'id' | 'nome' | 'cidade' | 'etapa' | 'corretor' | 'origem' | 'vgv' | 'telefone' | 'tipoOperacao'
 >
 
 export interface HistoricoEtapa {
@@ -125,11 +137,21 @@ export interface Cidade {
   atualizadoEm: string | Date
 }
 
+export interface Bairro {
+  id: string
+  nome: string
+  cidadeId: string
+  ativo: boolean
+  criadoEm: string | Date
+  atualizadoEm: string | Date
+}
+
 export interface Construtora {
   id: string
   nome: string
   cidade: string | null
   ativo: boolean
+  origemCatalogo?: OrigemCatalogo
   criadoEm: string | Date
   atualizadoEm: string | Date
 }

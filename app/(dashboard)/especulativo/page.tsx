@@ -7,6 +7,9 @@ import { LeadsTable } from '@/components/dashboard/LeadsTable'
 import { TimelineChart } from '@/components/dashboard/TimelineChart'
 import { FilterBar } from '@/components/dashboard/FilterBar'
 import { PageHeading } from '@/components/ui/PageHeading'
+import { OperacaoToggle } from '@/components/ui/OperacaoToggle'
+import { etapaLabel } from '@/lib/constants/operacao'
+import { useOperacao } from '@/lib/contexts/OperacaoContext'
 import {
   getLeadsWithFilters,
   getFilterOptions,
@@ -23,6 +26,7 @@ import type { Lead } from '@/lib/types'
 const ITEMS_PER_PAGE = 50
 
 export default function EspeculativoPage() {
+  const { tipoOperacao, setTipoOperacao } = useOperacao()
   const [leads, setLeads] = useState<Lead[]>([])
   const [totalLeads, setTotalLeads] = useState(0)
   const [loading, setLoading] = useState(true)
@@ -41,11 +45,17 @@ export default function EspeculativoPage() {
 
   const [filters, setFilters] = useState({
     etapa: 'especulativo' as const,
+    tipoOperacao,
     corretor: undefined as string | undefined,
     coordenador: undefined as string | undefined,
     construtora: undefined as string | undefined,
     cidade: undefined as string | undefined,
   })
+
+  useEffect(() => {
+    setFilters((prev) => ({ ...prev, tipoOperacao }))
+    setCurrentPage(1)
+  }, [tipoOperacao])
 
   useEffect(() => {
     const loadFilterOptions = async () => {
@@ -105,15 +115,20 @@ export default function EspeculativoPage() {
   return (
     <div className="page-section">
       <PageHeading
-        title="Especulativo"
-        description="Propostas em andamento e VGV em carteira."
+        title={etapaLabel('especulativo', tipoOperacao)}
+        description="Propostas em andamento e valor em carteira."
       />
+
+      <div className="card">
+        <OperacaoToggle value={tipoOperacao} onChange={setTipoOperacao} />
+      </div>
 
       <FilterBar
         filters={filters}
         onFilterChange={(f) => {
           setFilters({
             etapa: 'especulativo',
+            tipoOperacao,
             corretor: f.corretor,
             coordenador: f.coordenador,
             construtora: f.construtora,

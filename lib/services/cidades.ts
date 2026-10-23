@@ -38,6 +38,14 @@ export async function listCidadeNomes(onlyActive = true): Promise<string[]> {
   return list.map((c) => c.nome)
 }
 
+/** Resolve o id do cadastro a partir do nome (lead ainda guarda cidade como texto). */
+export async function findCidadeIdByNome(nome: string): Promise<string | null> {
+  const needle = nome.trim().toLocaleLowerCase('pt-BR')
+  if (!needle) return null
+  const list = await listCidades(false)
+  return list.find((cidade) => cidade.nome.toLocaleLowerCase('pt-BR') === needle)?.id ?? null
+}
+
 export async function createCidade(input: CidadeInput): Promise<Cidade> {
   try {
     const nome = input.nome?.trim()

@@ -14,22 +14,19 @@ import {
   TIPOS_IMOVEL,
   optionLabel,
 } from '@/lib/constants/lead-options'
-import type { Lead } from '@/lib/types'
+import {
+  etapaLabel,
+  TIPOS_CONTRATO,
+  TIPOS_OPERACAO,
+  TITULARIDADES,
+} from '@/lib/constants/operacao'
+import { calcularVga } from '@/lib/utils/vga'
+import type { Lead, TipoOperacao } from '@/lib/types'
 
 const EditLeadModal = dynamic(
   () => import('@/components/leads/EditLeadModal').then((module) => module.EditLeadModal),
   { ssr: false },
 )
-
-const ETAPA_LABELS: Record<string, string> = {
-  lead: 'Novo lead',
-  analise: 'Em análise',
-  aprovado: 'Aprovado',
-  visita: 'Visita',
-  especulativo: 'Especulativo',
-  realizado: 'Realizado',
-  reprovado: 'Reprovado',
-}
 
 function formatDate(value: string | Date | null | undefined) {
   if (!value) return 'Não informado'
@@ -117,14 +114,35 @@ export default function ClientePage() {
           <p className="eyebrow">Status comercial</p>
           <div className="mt-3 flex flex-wrap items-center gap-3">
             <span className="rounded-full border border-primary/20 bg-primary/10 px-3 py-1.5 text-label-md font-semibold text-primary">
-              {ETAPA_LABELS[lead.etapa] || lead.etapa}
+              {etapaLabel(lead.etapa, (lead.tipoOperacao as TipoOperacao) || 'venda')}
+            </span>
+            <span className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 text-label-md text-on-surface">
+              {optionLabel(TIPOS_OPERACAO, lead.tipoOperacao || 'venda')}
             </span>
             <span className="text-body-md text-on-surface-variant">{lead.origem || 'Origem não informada'}</span>
           </div>
         </div>
         <div className="card">
-          <p className="text-label-sm uppercase tracking-[0.14em] text-on-surface-variant">VGV</p>
-          <p data-numeric className="mt-2 font-display text-3xl text-on-surface">{formatBRL(lead.vgv)}</p>
+          {lead.tipoOperacao === 'aluguel' ? (
+            <>
+              <p className="text-label-sm uppercase tracking-[0.14em] text-on-surface-variant">VGA</p>
+              <p data-numeric className="mt-2 font-display text-3xl text-on-surface">
+                {formatBRL(calcularVga({
+                  valorAvaliacao: lead.valorAvaliacao,
+                  valorLocacaoMensal: lead.valorLocacaoMensal,
+                  prazoContratoMeses: lead.prazoContratoMeses,
+                }).receitaProjetada)}
+              </p>
+              <p className="mt-1 text-label-sm text-on-surface-variant">
+                Receita projetada do contrato
+              </p>
+            </>
+          ) : (
+            <>
+              <p className="text-label-sm uppercase tracking-[0.14em] text-on-surface-variant">VGV</p>
+              <p data-numeric className="mt-2 font-display text-3xl text-on-surface">{formatBRL(lead.vgv)}</p>
+            </>
+          )}
         </div>
       </div>
 
@@ -169,6 +187,34 @@ export default function ClientePage() {
         <InfoItem label="CHB" value={formatBRL(lead.chb)} />
         <InfoItem label="Faturamento previsto" value={formatBRL(lead.faturamentoPrevisto)} />
       </Section>
+
+      {lead.tipoOperacao === 'aluguel' && (
+        <Section title="Locação e VGA">
+          <InfoItem label="Tipo de contrato" value={optionLabel(TIPOS_CONTRATO, lead.tipoContrato)} />
+          <InfoItem label="Titularidade do imóvel" value={optionLabel(TITULARIDADES, lead.titularidade)} />
+          <InfoItem label="Valor de locação mensal" value={formatBRL(lead.valorLocacaoMensal)} />
+          <InfoItem label="Prazo do contrato" value={lead.prazoContratoMeses ? `${lead.prazoContratoMeses} meses` : '12 meses (padrão)'} />
+          <InfoItem
+            label="VGA (receita projetada)"
+            value={formatBRL(calcularVga({
+              valorAvaliacao: lead.valorAvaliacao,
+              valorLocacaoMensal: lead.valorLocacaoMensal,
+              prazoContratoMeses: lead.prazoContratoMeses,
+            }).receitaProjetada)}
+          />
+          <InfoItem
+            label="Rentabilidade bruta"
+            value={(() => {
+              const rent = calcularVga({
+                valorAvaliacao: lead.valorAvaliacao,
+                valorLocacaoMensal: lead.valorLocacaoMensal,
+                prazoContratoMeses: lead.prazoContratoMeses,
+              }).rentabilidadeBruta
+              return rent == null ? '—' : `${rent.toFixed(1)}%`
+            })()}
+          />
+        </Section>
+      )}
 
       <Section title="Renda e processo">
         <InfoItem label="Tipo de renda" value={lead.tipoRenda} />

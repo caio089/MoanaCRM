@@ -7,12 +7,16 @@ import { LeadsTable } from '@/components/dashboard/LeadsTable'
 import { TimelineChart } from '@/components/dashboard/TimelineChart'
 import { FilterBar } from '@/components/dashboard/FilterBar'
 import { PageHeading } from '@/components/ui/PageHeading'
+import { OperacaoToggle } from '@/components/ui/OperacaoToggle'
+import { etapaLabel } from '@/lib/constants/operacao'
+import { useOperacao } from '@/lib/contexts/OperacaoContext'
 import { getLeadsWithFilters, getFilterOptions, getTopByCorretor, getTopByConstrutora, getTopByCoordenador, getTopByCidade } from '@/lib/services/leads'
 import type { Lead } from '@/lib/types'
 
 const ITEMS_PER_PAGE = 50
 
 export default function AprovadosPage() {
+  const { tipoOperacao, setTipoOperacao } = useOperacao()
   const [leads, setLeads] = useState<Lead[]>([])
   const [totalLeads, setTotalLeads] = useState(0)
   const [loading, setLoading] = useState(true)
@@ -27,11 +31,17 @@ export default function AprovadosPage() {
 
   const [filters, setFilters] = useState({
     etapa: 'aprovado' as any,
+    tipoOperacao,
     corretor: undefined,
     coordenador: undefined,
     construtora: undefined,
     cidade: undefined,
   })
+
+  useEffect(() => {
+    setFilters((prev) => ({ ...prev, tipoOperacao }))
+    setCurrentPage(1)
+  }, [tipoOperacao])
 
   useEffect(() => {
     const loadFilterOptions = async () => {
@@ -75,11 +85,17 @@ export default function AprovadosPage() {
   return (
     <div className="page-section">
       <PageHeading
-        title="Aprovados"
-        description="Clientes com crédito aprovado e valor de avaliação."
+        title={etapaLabel('aprovado', tipoOperacao)}
+        description={tipoOperacao === 'aluguel'
+          ? 'Aprovação interna da diretoria ou sócios.'
+          : 'Clientes com crédito aprovado e valor de avaliação.'}
       />
 
-      <FilterBar filters={filters} onFilterChange={(f: any) => { setFilters({ ...f, etapa: 'aprovado' }); setCurrentPage(1) }} filterOptions={filterOptions} />
+      <div className="card">
+        <OperacaoToggle value={tipoOperacao} onChange={setTipoOperacao} />
+      </div>
+
+      <FilterBar filters={filters} onFilterChange={(f: any) => { setFilters({ ...f, etapa: 'aprovado', tipoOperacao }); setCurrentPage(1) }} filterOptions={filterOptions} />
 
       <MetricsRow
         metrics={[

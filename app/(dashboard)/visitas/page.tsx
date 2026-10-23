@@ -7,6 +7,9 @@ import { LeadsTable } from '@/components/dashboard/LeadsTable'
 import { TimelineChart } from '@/components/dashboard/TimelineChart'
 import { FilterBar } from '@/components/dashboard/FilterBar'
 import { PageHeading } from '@/components/ui/PageHeading'
+import { OperacaoToggle } from '@/components/ui/OperacaoToggle'
+import { etapaLabel } from '@/lib/constants/operacao'
+import { useOperacao } from '@/lib/contexts/OperacaoContext'
 import {
   getLeadsWithFilters,
   getFilterOptions,
@@ -21,6 +24,7 @@ import type { Lead } from '@/lib/types'
 const ITEMS_PER_PAGE = 50
 
 export default function VisitasPage() {
+  const { tipoOperacao, setTipoOperacao } = useOperacao()
   const [leads, setLeads] = useState<Lead[]>([])
   const [totalLeads, setTotalLeads] = useState(0)
   const [loading, setLoading] = useState(true)
@@ -34,6 +38,7 @@ export default function VisitasPage() {
 
   const [filters, setFilters] = useState<{
     etapa: 'visita'
+    tipoOperacao?: string
     corretor?: string
     coordenador?: string
     construtora?: string
@@ -44,7 +49,13 @@ export default function VisitasPage() {
     origem?: string
   }>({
     etapa: 'visita',
+    tipoOperacao,
   })
+
+  useEffect(() => {
+    setFilters((prev) => ({ ...prev, tipoOperacao }))
+    setCurrentPage(1)
+  }, [tipoOperacao])
 
   useEffect(() => {
     const loadFilterOptions = async () => {
@@ -93,14 +104,18 @@ export default function VisitasPage() {
   return (
     <div className="page-section">
       <PageHeading
-        title="Visitas"
+        title={etapaLabel('visita', tipoOperacao)}
         description="Agendamentos por cidade, construtora, produto e bairro — sem valor financeiro."
       />
+
+      <div className="card">
+        <OperacaoToggle value={tipoOperacao} onChange={setTipoOperacao} />
+      </div>
 
       <FilterBar
         filters={filters}
         onFilterChange={(f) => {
-          setFilters({ ...f, etapa: 'visita' })
+          setFilters({ ...f, etapa: 'visita', tipoOperacao })
           setCurrentPage(1)
         }}
         filterOptions={filterOptions}

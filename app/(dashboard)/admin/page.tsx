@@ -102,6 +102,11 @@ export default function AdminPage() {
           <h2 className="mt-1 text-headline-sm text-on-surface transition group-hover:text-primary">Cidades</h2>
           <p className="mt-2 text-body-md text-on-surface-variant">Cadastro usado no formulário de leads e filtros.</p>
         </Link>
+        <Link href="/admin/bairros" className="card card-interactive group block">
+          <p className="eyebrow">Localização</p>
+          <h2 className="mt-1 text-headline-sm text-on-surface transition group-hover:text-primary">Bairros</h2>
+          <p className="mt-2 text-body-md text-on-surface-variant">Bairros vinculados à cidade, usados no interesse do lead.</p>
+        </Link>
         <Link href="/admin/construtoras" className="card card-interactive group block">
           <p className="eyebrow">Empreendimentos</p>
           <h2 className="mt-1 text-headline-sm text-on-surface transition group-hover:text-primary">Construtoras</h2>

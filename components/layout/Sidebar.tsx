@@ -158,6 +158,15 @@ const NAV = [
     ),
   },
   {
+    href: '/admin/bairros',
+    label: 'Bairros · Adm',
+    icon: (
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M4 21V8l8-5 8 5v13" /><path d="M9 21v-6h6v6" />
+      </svg>
+    ),
+  },
+  {
     href: '/admin/cidades',
     label: 'Cidades · Adm',
     icon: (

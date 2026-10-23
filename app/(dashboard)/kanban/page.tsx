@@ -5,7 +5,10 @@ import Link from 'next/link'
 import dynamic from 'next/dynamic'
 import { KanbanBoard } from '@/components/kanban/KanbanBoard'
 import { PageHeading } from '@/components/ui/PageHeading'
+import { OperacaoToggle } from '@/components/ui/OperacaoToggle'
 import { FilterBar, type FilterBarFilters } from '@/components/dashboard/FilterBar'
+import { etapasPorOperacao } from '@/lib/constants/operacao'
+import { useOperacao } from '@/lib/contexts/OperacaoContext'
 import { getKanbanLeads, getFilterOptions } from '@/lib/services/leads'
 import { useToast } from '@/lib/contexts/ToastContext'
 import type { KanbanLead } from '@/lib/types'
@@ -16,6 +19,7 @@ const EditLeadModal = dynamic(
 )
 
 export default function KanbanPage() {
+  const { tipoOperacao, setTipoOperacao } = useOperacao()
   const { addToast } = useToast()
   const [leads, setLeads] = useState<KanbanLead[]>([])
   const [loading, setLoading] = useState(true)
@@ -37,15 +41,7 @@ export default function KanbanPage() {
         corretores: options.corretores,
         coordenadores: options.coordenadores,
         cidades: options.cidades,
-        etapas: [
-          { value: 'lead', label: 'Lead' },
-          { value: 'analise', label: 'Análise' },
-          { value: 'aprovado', label: 'Aprovado' },
-          { value: 'especulativo', label: 'Especulativo' },
-          { value: 'visita', label: 'Visita' },
-          { value: 'realizado', label: 'Realizado' },
-          { value: 'reprovado', label: 'Reprovado' },
-        ],
+        etapas: etapasPorOperacao(tipoOperacao),
       })
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Não foi possível carregar o Kanban.'
@@ -53,7 +49,7 @@ export default function KanbanPage() {
     } finally {
       setLoading(false)
     }
-  }, [addToast])
+  }, [addToast, tipoOperacao])
 
   useEffect(() => {
     loadLeads()
@@ -73,6 +69,7 @@ export default function KanbanPage() {
     })()
 
     const filtered = leads.filter((lead) => {
+      if ((lead.tipoOperacao ?? 'venda') !== tipoOperacao) return false
       if (corretorLabel && lead.corretor !== corretorLabel) return false
       if (filters.etapa && lead.etapa !== filters.etapa) return false
       if (filters.cidade && lead.cidade !== filters.cidade) return false
@@ -88,7 +85,7 @@ export default function KanbanPage() {
     })
 
     return { filteredLeads: filtered, activeLeads: active }
-  }, [filterOptions.corretores, filters, leads])
+  }, [filterOptions.corretores, filters, leads, tipoOperacao])
 
   return (
     <div className="page-section max-w-none">
@@ -102,6 +99,10 @@ export default function KanbanPage() {
           </Link>
         )}
       />
+
+      <div className="card">
+        <OperacaoToggle value={tipoOperacao} onChange={setTipoOperacao} />
+      </div>
 
       <FilterBar
         filters={filters}
@@ -130,6 +131,7 @@ export default function KanbanPage() {
         leads={filteredLeads}
         loading={loading}
         onOpenLead={setEditingLeadId}
+        operacao={tipoOperacao}
       />
 
       {editingLeadId && (

@@ -9,6 +9,7 @@ export const ORIGENS = [
   { value: 'YouTube', label: 'YouTube' },
   { value: 'WhatsApp', label: 'WhatsApp' },
   { value: 'Site', label: 'Site' },
+  { value: 'Captação pessoal', label: 'Captação pessoal' },
   { value: 'Indicação', label: 'Indicação' },
   { value: 'Plantão', label: 'Plantão' },
   { value: 'Imoblead', label: 'Imoblead' },

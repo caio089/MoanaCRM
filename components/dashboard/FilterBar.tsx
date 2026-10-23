@@ -23,6 +23,7 @@ export type FilterBarFilters = {
   situacao?: string
   origem?: string
   etapa?: string
+  tipoOperacao?: string
 }
 
 interface FilterBarProps {

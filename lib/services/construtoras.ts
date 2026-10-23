@@ -1,18 +1,21 @@
 import { supabase } from '@/lib/supabase'
-import type { Construtora } from '@/lib/types'
+import type { Construtora, OrigemCatalogo } from '@/lib/types'
 
 export type ConstrutoraInput = {
   nome: string
   cidade?: string | null
   ativo?: boolean
+  origemCatalogo?: OrigemCatalogo
 }
 
 function asConstrutora(row: Record<string, unknown>): Construtora {
+  const origem = row.origemCatalogo ?? row.origem_catalogo
   return {
     id: String(row.id),
     nome: String(row.nome),
     cidade: (row.cidade as string | null) ?? null,
     ativo: Boolean(row.ativo),
+    origemCatalogo: origem === 'proprio' ? 'proprio' : 'parceira',
     criadoEm: (row.criadoEm ?? row.criado_em) as string | Date,
     atualizadoEm: (row.atualizadoEm ?? row.atualizado_em) as string | Date,
   }
@@ -49,6 +52,7 @@ export async function createConstrutora(input: ConstrutoraInput): Promise<Constr
         nome,
         cidade: input.cidade?.trim() || null,
         ativo: input.ativo ?? true,
+        origemCatalogo: input.origemCatalogo === 'proprio' ? 'proprio' : 'parceira',
       })
       .select()
       .single()
@@ -74,6 +78,9 @@ export async function updateConstrutora(
     }
     if (input.cidade !== undefined) payload.cidade = input.cidade?.trim() || null
     if (input.ativo !== undefined) payload.ativo = input.ativo
+    if (input.origemCatalogo !== undefined) {
+      payload.origemCatalogo = input.origemCatalogo === 'proprio' ? 'proprio' : 'parceira'
+    }
 
     const { data, error } = await supabase
       .from('construtoras')

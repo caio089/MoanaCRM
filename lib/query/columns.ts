@@ -19,6 +19,14 @@ const CAMEL_TO_SNAKE: Record<string, string> = {
   corretorId: 'corretor_id',
   correspondenteId: 'correspondente_id',
   userId: 'user_id',
+  tipoOperacao: 'tipo_operacao',
+  tipoContrato: 'tipo_contrato',
+  valorLocacaoMensal: 'valor_locacao_mensal',
+  titularidade: 'titularidade',
+  prazoContratoMeses: 'prazo_contrato_meses',
+  bairroId: 'bairro_id',
+  cidadeId: 'cidade_id',
+  origemCatalogo: 'origem_catalogo',
 }
 
 const SNAKE_TO_CAMEL = Object.fromEntries(
@@ -69,6 +77,12 @@ const KNOWN_LEAD_FIELDS = new Set([
   'coordenadorId',
   'corretorId',
   'correspondenteId',
+  'tipoOperacao',
+  'tipoContrato',
+  'valorLocacaoMensal',
+  'titularidade',
+  'prazoContratoMeses',
+  'bairroId',
 ])
 
 /** Campos permitidos em inserts/updates de equipe / correspondentes */
@@ -124,6 +138,7 @@ const TEAM_TABLES = new Set([
   'correspondentes',
   'cidades',
   'construtoras',
+  'bairros',
 ])
 
 const KNOWN_CATALOG_FIELDS = new Set([
@@ -131,6 +146,8 @@ const KNOWN_CATALOG_FIELDS = new Set([
   'nome',
   'uf',
   'cidade',
+  'cidadeId',
+  'origemCatalogo',
   'ativo',
   'criadoEm',
   'atualizadoEm',
@@ -179,7 +196,7 @@ export function isKnownWritableField(field: string, table: string): boolean {
   }
 
   if (TEAM_TABLES.has(table)) {
-    if (table === 'cidades' || table === 'construtoras') {
+    if (table === 'cidades' || table === 'construtoras' || table === 'bairros') {
       return KNOWN_CATALOG_FIELDS.has(field)
     }
     return KNOWN_TEAM_FIELDS.has(field)

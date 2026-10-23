@@ -1,12 +1,15 @@
 import { useMemo } from 'react'
 import { useFilters } from '@/lib/contexts/FiltersContext'
+import { useOperacao } from '@/lib/contexts/OperacaoContext'
 import type { Lead } from '@/lib/types'
 
 export function useFilteredLeads(leads: Lead[]) {
   const { filters } = useFilters()
+  const { tipoOperacao } = useOperacao()
 
   return useMemo(() => {
     return leads.filter(lead => {
+      if ((lead.tipoOperacao ?? 'venda') !== tipoOperacao) return false
       if (filters.search) {
         const searchLower = filters.search.toLowerCase()
         const matchesSearch =
@@ -30,5 +33,5 @@ export function useFilteredLeads(leads: Lead[]) {
 
       return true
     })
-  }, [leads, filters])
+  }, [leads, filters, tipoOperacao])
 }

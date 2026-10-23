@@ -23,6 +23,8 @@ export const ZONAS: LeadOption[] = [
 export const TIPOS_IMOVEL: LeadOption[] = [
   { value: 'apartamento', label: 'Apartamento' },
   { value: 'casa', label: 'Casa' },
+  { value: 'sala_comercial', label: 'Sala comercial' },
+  { value: 'galpao', label: 'Galpão' },
   { value: 'terreno', label: 'Terreno' },
   { value: 'comercial', label: 'Comercial' },
   { value: 'industrial', label: 'Industrial' },

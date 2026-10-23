@@ -1,6 +1,7 @@
 import { periodoCutoffIso, type PeriodoFiltro } from '@/lib/periodo'
 import { supabase } from '@/lib/supabase'
-import type { ContagemPorEtapa, EntidadeMetrics, EtapaFunil } from '@/lib/types'
+import type { ContagemPorEtapa, EntidadeMetrics, EtapaFunil, TipoOperacao } from '@/lib/types'
+import { calcularVga } from '@/lib/utils/vga'
 
 const ETAPAS: EtapaFunil[] = [
   'lead',
@@ -33,6 +34,10 @@ type LeadMetricRow = {
   corretorId?: string | null
   coordenador?: string | null
   corretor?: string | null
+  tipoOperacao?: TipoOperacao | null
+  valorLocacaoMensal?: number | null
+  prazoContratoMeses?: number | null
+  valorAvaliacao?: number | null
 }
 
 /** Filtros da Visão Geral (AND lógico). IDs preferenciais + fallback string. */
@@ -43,6 +48,7 @@ export type DashboardFilters = {
   /** ID do cadastro de corretores (URL `?corretor=`) */
   corretorId?: string
   etapa?: EtapaFunil
+  tipoOperacao?: TipoOperacao
 }
 
 export type DashboardRecentLead = {
@@ -72,6 +78,11 @@ export type DashboardSummary = {
   topCoordenadores: Array<{ name: string; value: number }>
   topConstrutoras: Array<{ name: string; value: number }>
   clientesRecentes: DashboardRecentLead[]
+  totalVisitas: number
+  taxaConversaoVisitas: number
+  taxaConversaoLeads: number
+  vgaTotal: number
+  vgaRealizado: number
 }
 
 type TeamMember = { id: string; nome: string }
@@ -158,7 +169,7 @@ async function fetchLeadMetricRows(): Promise<LeadMetricRow[]> {
   const { data, error } = await supabase
     .from('leads')
     .select(
-      'id, nome, etapa, vgv, construtora, criado_em, atualizado_em, coordenador_id, corretor_id, coordenador, corretor',
+      'id, nome, etapa, vgv, construtora, criado_em, atualizado_em, coordenador_id, corretor_id, coordenador, corretor, tipo_operacao, valor_locacao_mensal, prazo_contrato_meses, valor_avaliacao',
     )
 
   if (error) throw new Error(error.message)
@@ -175,6 +186,10 @@ async function fetchLeadMetricRows(): Promise<LeadMetricRow[]> {
     corretorId: (row.corretorId ?? row.corretor_id ?? null) as string | null,
     coordenador: (row.coordenador as string | null) ?? null,
     corretor: (row.corretor as string | null) ?? null,
+    tipoOperacao: row.tipoOperacao === 'aluguel' || row.tipo_operacao === 'aluguel' ? 'aluguel' : 'venda',
+    valorLocacaoMensal: toNumber(row.valorLocacaoMensal ?? row.valor_locacao_mensal),
+    prazoContratoMeses: toNumber(row.prazoContratoMeses ?? row.prazo_contrato_meses),
+    valorAvaliacao: toNumber(row.valorAvaliacao ?? row.valor_avaliacao),
   }))
 }
 
@@ -287,9 +302,15 @@ export async function getDashboardSummary(
       scoped = scoped.filter((lead) => lead.etapa === filters.etapa)
     }
 
+    if (filters.tipoOperacao) {
+      scoped = scoped.filter((lead) => (lead.tipoOperacao ?? 'venda') === filters.tipoOperacao)
+    }
+
     const porEtapa = emptyPorEtapa()
     let vgvTotal = 0
     let vgvRealizado = 0
+    let vgaTotal = 0
+    let vgaRealizado = 0
     let leadsSemCorretor = 0
     const porCorretor = new Map<string, { label: string; value: number }>()
     const porCoordenador = new Map<string, { label: string; value: number }>()
@@ -307,6 +328,16 @@ export async function getDashboardSummary(
       const vgv = toNumber(lead.vgv)
       vgvTotal += vgv
       if (lead.etapa === 'realizado') vgvRealizado += vgv
+
+      if ((lead.tipoOperacao ?? 'venda') === 'aluguel') {
+        const vga = calcularVga({
+          valorAvaliacao: toNumber(lead.valorAvaliacao),
+          valorLocacaoMensal: toNumber(lead.valorLocacaoMensal),
+          prazoContratoMeses: toNumber(lead.prazoContratoMeses) || 12,
+        }).receitaProjetada
+        vgaTotal += vga
+        if (lead.etapa === 'realizado') vgaRealizado += vga
+      }
 
       const corrLabel = resolveCorretorLabel(lead)
       if (!corrLabel && !lead.corretorId) {
@@ -344,6 +375,7 @@ export async function getDashboardSummary(
     const totalLeads = porEtapa.total
     const totalAprovados = porEtapa.aprovado ?? 0
     const totalRealizados = porEtapa.realizado ?? 0
+    const totalVisitas = porEtapa.visita ?? 0
     const topConstrutoras = rankByCount(porConstrutora)
     const principalConstrutora = topConstrutoras[0] ?? null
     const leadsComConstrutora = Array.from(porConstrutora.values()).reduce(
@@ -368,6 +400,9 @@ export async function getDashboardSummary(
     }
     if (filters.etapa) {
       previous = previous.filter((lead) => lead.etapa === filters.etapa)
+    }
+    if (filters.tipoOperacao) {
+      previous = previous.filter((lead) => (lead.tipoOperacao ?? 'venda') === filters.tipoOperacao)
     }
     const totalAnterior = previous.length
     const variacao =
@@ -419,6 +454,11 @@ export async function getDashboardSummary(
       ),
       topConstrutoras,
       clientesRecentes,
+      totalVisitas,
+      taxaConversaoVisitas: totalVisitas > 0 ? (totalRealizados / totalVisitas) * 100 : 0,
+      taxaConversaoLeads: totalLeads > 0 ? (totalRealizados / totalLeads) * 100 : 0,
+      vgaTotal,
+      vgaRealizado,
     }
   } catch (error) {
     console.error('Erro ao calcular resumo do dashboard:', error)

@@ -15,6 +15,7 @@ export const PAGE_TITLES: Record<string, string> = {
   '/admin/corretores': 'Corretores',
   '/admin/correspondentes': 'Correspondentes',
   '/admin/cidades': 'Cidades',
+  '/admin/bairros': 'Bairros',
   '/admin/construtoras': 'Construtoras',
   '/novo-lead': 'Novo Lead',
 }

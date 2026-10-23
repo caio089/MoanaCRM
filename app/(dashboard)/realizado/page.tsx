@@ -7,12 +7,16 @@ import { LeadsTable } from '@/components/dashboard/LeadsTable'
 import { TimelineChart } from '@/components/dashboard/TimelineChart'
 import { FilterBar } from '@/components/dashboard/FilterBar'
 import { PageHeading } from '@/components/ui/PageHeading'
+import { OperacaoToggle } from '@/components/ui/OperacaoToggle'
+import { etapaLabel } from '@/lib/constants/operacao'
+import { useOperacao } from '@/lib/contexts/OperacaoContext'
 import { getLeadsWithFilters, getFilterOptions, getTopByCorretor, getTopByVGVCorretor, getTopByConstrutora, getTopByModalidade, getTopByCidade, getTopByTipo } from '@/lib/services/leads'
 import type { Lead } from '@/lib/types'
 
 const ITEMS_PER_PAGE = 50
 
 export default function RealizadoPage() {
+  const { tipoOperacao, setTipoOperacao } = useOperacao()
   const [leads, setLeads] = useState<Lead[]>([])
   const [totalLeads, setTotalLeads] = useState(0)
   const [loading, setLoading] = useState(true)
@@ -28,11 +32,17 @@ export default function RealizadoPage() {
 
   const [filters, setFilters] = useState({
     etapa: 'realizado' as any,
+    tipoOperacao,
     corretor: undefined,
     coordenador: undefined,
     construtora: undefined,
     cidade: undefined,
   })
+
+  useEffect(() => {
+    setFilters((prev) => ({ ...prev, tipoOperacao }))
+    setCurrentPage(1)
+  }, [tipoOperacao])
 
   useEffect(() => {
     const loadFilterOptions = async () => {
@@ -79,11 +89,17 @@ export default function RealizadoPage() {
   return (
     <div className="page-section">
       <PageHeading
-        title="Realizado"
-        description="Vendas concluídas e valor gerado no período."
+        title={etapaLabel('realizado', tipoOperacao)}
+        description={tipoOperacao === 'aluguel'
+          ? 'Contratos assinados e VGA gerado no período.'
+          : 'Vendas concluídas e valor gerado no período.'}
       />
 
-      <FilterBar filters={filters} onFilterChange={(f: any) => { setFilters({ ...f, etapa: 'realizado' }); setCurrentPage(1) }} filterOptions={filterOptions} />
+      <div className="card">
+        <OperacaoToggle value={tipoOperacao} onChange={setTipoOperacao} />
+      </div>
+
+      <FilterBar filters={filters} onFilterChange={(f: any) => { setFilters({ ...f, etapa: 'realizado', tipoOperacao }); setCurrentPage(1) }} filterOptions={filterOptions} />
 
       <MetricsRow
         metrics={[

@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from 'react'
 import { Select } from '@/components/forms/FormField'
-import { listConstrutoraNomes } from '@/lib/services/construtoras'
+import { listConstrutoras } from '@/lib/services/construtoras'
+import type { Construtora } from '@/lib/types'
 
 type ConstrutoraSelectProps = {
   value: string
@@ -14,17 +15,17 @@ type ConstrutoraSelectProps = {
   includeValueIfMissing?: boolean
 }
 
-/** Select de construtoras cadastradas (tabela `construtoras` no Supabase). */
+/** Select de construtoras / produtos próprios cadastrados. */
 export function ConstrutoraSelect({
   value,
   onChange,
-  label = 'Construtora',
+  label = 'Construtora / produto',
   required = false,
   error,
   disabled,
   includeValueIfMissing = true,
 }: ConstrutoraSelectProps) {
-  const [nomes, setNomes] = useState<string[]>([])
+  const [items, setItems] = useState<Construtora[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -32,11 +33,11 @@ export function ConstrutoraSelect({
     ;(async () => {
       try {
         setLoading(true)
-        const list = await listConstrutoraNomes(true)
-        if (!cancelled) setNomes(list)
+        const list = await listConstrutoras(true)
+        if (!cancelled) setItems(list)
       } catch (err) {
         console.error('Erro ao carregar construtoras:', err)
-        if (!cancelled) setNomes([])
+        if (!cancelled) setItems([])
       } finally {
         if (!cancelled) setLoading(false)
       }
@@ -46,13 +47,17 @@ export function ConstrutoraSelect({
     }
   }, [])
 
-  const options = [...nomes]
+  const options = items.map((item) => ({
+    value: item.nome,
+    label: `${item.origemCatalogo === 'proprio' ? 'Próprio' : 'Parceira'} · ${item.nome}`,
+  }))
+
   if (
     includeValueIfMissing &&
     value &&
-    !options.some((n) => n.toLowerCase() === value.toLowerCase())
+    !options.some((item) => item.value.toLowerCase() === value.toLowerCase())
   ) {
-    options.unshift(value)
+    options.unshift({ value, label: value })
   }
 
   return (
@@ -63,7 +68,7 @@ export function ConstrutoraSelect({
       disabled={disabled || loading}
       error={error}
       onChange={(e) => onChange(e.target.value)}
-      options={options.map((nome) => ({ value: nome, label: nome }))}
+      options={options}
     />
   )
 }
