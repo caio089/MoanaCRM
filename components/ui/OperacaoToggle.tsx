@@ -3,7 +3,8 @@
 import { TIPOS_OPERACAO, type TipoOperacao } from '@/lib/constants/operacao'
 
 type OperacaoToggleProps = {
-  value: TipoOperacao
+  /** String vazia é usada no cadastro até que uma operação seja escolhida. */
+  value: TipoOperacao | ''
   onChange: (value: TipoOperacao) => void
   required?: boolean
 }

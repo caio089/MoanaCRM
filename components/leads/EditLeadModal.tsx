@@ -379,12 +379,6 @@ export function EditLeadModal({
                   options={TIPOS_IMOVEL}
                 />
                 <TextInput
-                  label="Valor de Avaliação"
-                  type="number"
-                  value={formData.valorAvaliacao}
-                  onChange={(e) => setFormData({ ...formData, valorAvaliacao: e.target.value })}
-                />
-                <TextInput
                   label="Valor de Fechamento"
                   type="number"
                   value={formData.valorFecho}
@@ -403,6 +397,12 @@ export function EditLeadModal({
                       value={formData.tipoContrato}
                       onChange={(e) => setFormData({ ...formData, tipoContrato: e.target.value })}
                       options={TIPOS_CONTRATO}
+                    />
+                    <TextInput
+                      label="Valor de Avaliação"
+                      type="number"
+                      value={formData.valorAvaliacao}
+                      onChange={(e) => setFormData({ ...formData, valorAvaliacao: e.target.value })}
                     />
                     <Select
                       label="Titularidade do imóvel"

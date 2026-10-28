@@ -92,7 +92,7 @@ export function CreateLeadForm({ onSuccess }: CreateLeadFormProps) {
     observacao: '',
     situacaoReprovado: '',
     ccv: false,
-    tipoOperacao: 'venda' as TipoOperacao,
+    tipoOperacao: '' as TipoOperacao | '',
     tipoContrato: '',
     valorLocacaoMensal: '',
     titularidade: '',
@@ -195,7 +195,9 @@ export function CreateLeadForm({ onSuccess }: CreateLeadFormProps) {
           <p className="mt-2 text-body-md text-on-surface-variant">
             {formData.tipoOperacao === 'aluguel'
               ? 'Campos e etapas seguem o funil de locação.'
-              : 'Campos e etapas seguem o funil de venda / financiamento.'}
+              : formData.tipoOperacao === 'venda'
+                ? 'Campos e etapas seguem o funil de venda / financiamento.'
+                : 'Escolha uma operação para adaptar os campos e as etapas do lead.'}
           </p>
         </div>
 
@@ -281,13 +283,6 @@ export function CreateLeadForm({ onSuccess }: CreateLeadFormProps) {
               options={TIPOS_IMOVEL}
             />
             <TextInput
-              label="Valor de Avaliação"
-              type="number"
-              value={formData.valorAvaliacao}
-              onChange={(e) => setFormData({ ...formData, valorAvaliacao: e.target.value })}
-              placeholder="R$ 0,00"
-            />
-            <TextInput
               label="Valor de Fechamento"
               type="number"
               value={formData.valorFecho}
@@ -308,6 +303,13 @@ export function CreateLeadForm({ onSuccess }: CreateLeadFormProps) {
                   value={formData.tipoContrato}
                   onChange={(e) => setFormData({ ...formData, tipoContrato: e.target.value })}
                   options={TIPOS_CONTRATO}
+                />
+                <TextInput
+                  label="Valor de Avaliação"
+                  type="number"
+                  value={formData.valorAvaliacao}
+                  onChange={(e) => setFormData({ ...formData, valorAvaliacao: e.target.value })}
+                  placeholder="R$ 0,00"
                 />
                 <Select
                   label="Titularidade do imóvel"
@@ -406,7 +408,7 @@ export function CreateLeadForm({ onSuccess }: CreateLeadFormProps) {
               required
               value={formData.etapa}
               onChange={(e) => setFormData({ ...formData, etapa: e.target.value })}
-              options={etapasPorOperacao(formData.tipoOperacao)}
+              options={etapasPorOperacao(formData.tipoOperacao || 'venda')}
               error={getError('etapa')}
             />
             <Select
