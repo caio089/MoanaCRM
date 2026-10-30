@@ -50,3 +50,8 @@ next-env.d.ts
 supabase/.temp/
 .env
 !.env.example
+
+# data backups
+data/backups/
+.superpowers/
+*.xlsx
