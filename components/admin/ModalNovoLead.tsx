@@ -3,8 +3,7 @@
 import { useState } from 'react'
 import type { Lead } from '@/lib/types'
 import { ORIGENS } from '@/lib/constants/origens'
-
-const ETAPAS = ['lead', 'analise', 'aprovado', 'especulativo', 'realizado', 'reprovado', 'visita']
+import { TIPOS_OPERACAO, etapasPorOperacao, type TipoOperacao } from '@/lib/constants/operacao'
 
 interface ModalNovoLeadProps {
   lead?: Lead | null
@@ -25,6 +24,7 @@ export function ModalNovoLead({ lead, onSave, onClose }: ModalNovoLeadProps) {
     construtora: lead?.construtora || '',
     origem: lead?.origem || '',
     vgv: lead?.vgv ? Number(lead.vgv) : '',
+    tipoOperacao: (lead?.tipoOperacao || '') as TipoOperacao | '',
   })
 
   const [erros, setErros] = useState<Record<string, string>>({})
@@ -147,6 +147,29 @@ export function ModalNovoLead({ lead, onSave, onClose }: ModalNovoLeadProps) {
           </div>
 
           <div>
+            <label className="block text-label-sm text-on-surface-variant mb-1">Tipo de Operação</label>
+            <div className="flex gap-2">
+              {TIPOS_OPERACAO.map((op) => {
+                const active = formData.tipoOperacao === op.value
+                return (
+                  <button
+                    key={op.value}
+                    type="button"
+                    onClick={() => setFormData(prev => ({ ...prev, tipoOperacao: op.value as TipoOperacao }))}
+                    className={`flex-1 px-3 py-2 rounded border text-sm font-medium transition ${
+                      active
+                        ? 'border-primary bg-primary/20 text-primary'
+                        : 'border-outline bg-surface-high text-on-surface hover:bg-outline/20'
+                    }`}
+                  >
+                    {op.label}
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+
+          <div>
             <label className="block text-label-sm text-on-surface-variant mb-1">Etapa</label>
             <select
               name="etapa"
@@ -154,8 +177,8 @@ export function ModalNovoLead({ lead, onSave, onClose }: ModalNovoLeadProps) {
               onChange={handleChange}
               className="w-full px-3 py-2 border border-outline rounded bg-surface-high text-on-surface"
             >
-              {ETAPAS.map(e => (
-                <option key={e} value={e}>{e.toUpperCase()}</option>
+              {etapasPorOperacao(formData.tipoOperacao || 'venda').map(e => (
+                <option key={e.value} value={e.value}>{e.label}</option>
               ))}
             </select>
           </div>

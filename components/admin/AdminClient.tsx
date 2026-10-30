@@ -50,10 +50,13 @@ export function AdminClient({ initialLeads, onLeadsChange }: AdminClientProps) {
             zona: dados.zona || null,
             etapa: dados.etapa || 'lead',
             corretor: dados.corretor || null,
+            corretor_id: null,
             coordenador: dados.coordenador || null,
+            coordenador_id: null,
             construtora: dados.construtora || null,
             origem: dados.origem || null,
             vgv: dados.vgv ? parseFloat(String(dados.vgv)) : null,
+            tipo_operacao: dados.tipoOperacao || 'venda',
             criado_em: agora.toISOString(),
             atualizado_em: agora.toISOString(),
           },
@@ -101,6 +104,7 @@ export function AdminClient({ initialLeads, onLeadsChange }: AdminClientProps) {
           construtora: dados.construtora || null,
           origem: dados.origem || null,
           vgv: dados.vgv ? parseFloat(String(dados.vgv)) : null,
+          tipo_operacao: dados.tipoOperacao || 'venda',
           atualizado_em: agora.toISOString(),
         })
         .eq('id', id)

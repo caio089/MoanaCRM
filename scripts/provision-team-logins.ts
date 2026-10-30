@@ -7,6 +7,8 @@
  * Uso (convite por e-mail — precisa SMTP no projeto):
  *   SUPABASE_SERVICE_ROLE_KEY=... npx tsx scripts/provision-team-logins.ts
  */
+import fs from 'fs'
+import path from 'path'
 import { createClient } from '@supabase/supabase-js'
 
 type TeamRole = 'admin' | 'coordenador' | 'corretor'
@@ -17,9 +19,35 @@ type TeamMember = {
   role: TeamRole
 }
 
-/** Preencha com a equipe da Construtora Moana. Não versionar dados pessoais de outras empresas. */
+/** Carrega variáveis do .env.local caso não estejam no process.env */
+function loadEnvLocal() {
+  const envPath = path.resolve(process.cwd(), '.env.local')
+  if (fs.existsSync(envPath)) {
+    const content = fs.readFileSync(envPath, 'utf8')
+    content.split(/\r?\n/).forEach((line) => {
+      const trimmed = line.trim()
+      if (!trimmed || trimmed.startsWith('#')) return
+      const idx = trimmed.indexOf('=')
+      if (idx !== -1) {
+        const key = trimmed.slice(0, idx).trim()
+        let val = trimmed.slice(idx + 1).trim()
+        if ((val.startsWith('"') && val.endsWith('"')) || (val.startsWith("'") && val.endsWith("'"))) {
+          val = val.slice(1, -1)
+        }
+        if (!process.env[key]) {
+          process.env[key] = val
+        }
+      }
+    })
+  }
+}
+
+/** Equipe da Construtora Moana */
 const TEAM: TeamMember[] = [
-  // { email: 'admin@moana.local', name: 'Administração', role: 'admin' },
+  { email: 'andrecampelomatos@gmail.com', name: 'André Matos', role: 'admin' },
+  { email: 'rodrigocostathe@gmail.com', name: 'Rodrigo Sampaio', role: 'admin' },
+  { email: 'daniellymendes166@gmail.com', name: 'Danielly Mendes', role: 'corretor' },
+  { email: 'vincistrategy@gmail.com', name: 'Vinci', role: 'corretor' },
 ]
 
 async function listAllUsers(
@@ -51,17 +79,19 @@ async function listAllUsers(
 }
 
 async function main() {
+  loadEnvLocal()
+
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
-  const defaultPassword = process.env.TEAM_DEFAULT_PASSWORD
+  const defaultPassword = process.env.TEAM_DEFAULT_PASSWORD || 'Moana@2026!'
 
   if (!url || !serviceKey) {
-    console.error('Defina NEXT_PUBLIC_SUPABASE_URL e SUPABASE_SERVICE_ROLE_KEY')
+    console.error('ERRO: Defina NEXT_PUBLIC_SUPABASE_URL e SUPABASE_SERVICE_ROLE_KEY no seu arquivo .env.local')
     process.exit(1)
   }
 
   if (TEAM.length === 0) {
-    console.error('Preencha o array TEAM em scripts/provision-team-logins.ts com a equipe da Construtora Moana.')
+    console.error('Preencha o array TEAM em scripts/provision-team-logins.ts com a equipe.')
     process.exit(1)
   }
 
@@ -80,6 +110,7 @@ async function main() {
 
       if (existing) {
         const { error } = await admin.auth.admin.updateUserById(existing.id, {
+          password: defaultPassword,
           app_metadata: { ...existing.app_metadata, role: member.role },
           user_metadata: {
             ...existing.user_metadata,
@@ -88,8 +119,8 @@ async function main() {
           },
         })
         if (error) throw error
-        console.log(`✓ atualizado ${email} → ${member.role}`)
-      } else if (defaultPassword) {
+        console.log(`✓ atualizado ${email} → ${member.role} (senha definida para ${defaultPassword})`)
+      } else {
         const { error } = await admin.auth.admin.createUser({
           email,
           password: defaultPassword,
@@ -98,22 +129,7 @@ async function main() {
           user_metadata: { name: member.name, role: member.role },
         })
         if (error) throw error
-        console.log(`✓ criado ${email} → ${member.role}`)
-      } else {
-        const { error } = await admin.auth.admin.inviteUserByEmail(email, {
-          data: { name: member.name, role: member.role },
-        })
-        if (error) throw error
-
-        const again = await listAllUsers(admin)
-        const invited = again.find((u) => u.email?.toLowerCase() === email)
-        if (invited) {
-          await admin.auth.admin.updateUserById(invited.id, {
-            app_metadata: { ...invited.app_metadata, role: member.role },
-            user_metadata: { name: member.name, role: member.role },
-          })
-        }
-        console.log(`✓ convite ${email} → ${member.role}`)
+        console.log(`✓ criado ${email} → ${member.role} (senha: ${defaultPassword})`)
       }
       ok += 1
     } catch (err) {
@@ -126,23 +142,24 @@ async function main() {
   const users = await listAllUsers(admin)
   for (const u of users) {
     if (!u.email) continue
-    const role = String(u.app_metadata?.role || '')
-    if (role === 'coordenador' || role === 'supervisor') {
-      const { error } = await admin
-        .from('coordenadores')
-        .update({ user_id: u.id })
-        .ilike('email', u.email)
-      if (error) console.warn(`link coord ${u.email}:`, error.message)
-    } else if (role === 'corretor' || role === 'user') {
-      const { error } = await admin
-        .from('corretores')
-        .update({ user_id: u.id })
-        .ilike('email', u.email)
-      if (error) console.warn(`link corretor ${u.email}:`, error.message)
-    }
+
+    // Atualiza corretores se existir cadastro com esse e-mail
+    const { error: errCorretor } = await admin
+      .from('corretores')
+      .update({ user_id: u.id })
+      .ilike('email', u.email)
+    if (errCorretor) console.warn(`link corretor ${u.email}:`, errCorretor.message)
+
+    // Atualiza coordenadores se existir cadastro com esse e-mail
+    const { error: errCoord } = await admin
+      .from('coordenadores')
+      .update({ user_id: u.id })
+      .ilike('email', u.email)
+    if (errCoord) console.warn(`link coord ${u.email}:`, errCoord.message)
   }
 
-  console.log(`\nConcluído: ${ok} ok, ${fail} falhas`)
+  console.log(`\nConcluído com sucesso: ${ok} processados, ${fail} falhas`)
+  console.log(`Senha padrão aplicada: ${defaultPassword}`)
 }
 
 main().catch((err) => {

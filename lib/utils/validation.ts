@@ -55,10 +55,6 @@ export function validateLead(
       errors.push({ field: 'cidade', message: 'Cidade é obrigatória' })
     }
 
-    if (!data.corretor || !data.corretor.trim()) {
-      errors.push({ field: 'corretor', message: 'Corretor é obrigatório' })
-    }
-
     if (!data.origem || !data.origem.trim()) {
       errors.push({ field: 'origem', message: 'Origem é obrigatória' })
     }

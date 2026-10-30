@@ -421,7 +421,6 @@ export function CreateLeadForm({ onSuccess }: CreateLeadFormProps) {
             />
             <Select
               label="Corretor"
-              required
               value={formData.corretorId || formData.corretor}
               onChange={(e) => {
                 const value = e.target.value
@@ -431,7 +430,10 @@ export function CreateLeadForm({ onSuccess }: CreateLeadFormProps) {
                   corretor: findOptionLabel(filterOptions.corretores, value),
                 })
               }}
-              options={toSelectOptions(filterOptions.corretores)}
+              options={[
+                { value: '', label: 'Sem corretor (enviar para distribuição)' },
+                ...toSelectOptions(filterOptions.corretores),
+              ]}
               error={getError('corretor')}
             />
             <Select

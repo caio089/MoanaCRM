@@ -6,6 +6,8 @@ import { useToast } from '@/lib/contexts/ToastContext'
 import { TextInput, Select, TextArea } from '@/components/forms/FormField'
 import { CidadeSelect } from '@/components/cidades/CidadeSelect'
 import { ORIGENS } from '@/lib/constants/origens'
+import { useOperacao } from '@/lib/contexts/OperacaoContext'
+import { TIPOS_OPERACAO, etapasPorOperacao, type TipoOperacao } from '@/lib/constants/operacao'
 import {
   findOptionLabel,
   isTeamUuid,
@@ -29,6 +31,8 @@ export function QuickAddLeadModal({
   onSuccess,
   corretores,
 }: QuickAddLeadModalProps) {
+  const { tipoOperacao: globalOperacao } = useOperacao()
+  const [tipoOperacao, setTipoOperacao] = useState<TipoOperacao>('venda')
   const [formData, setFormData] = useState({
     nome: '',
     cpf: '',
@@ -46,25 +50,21 @@ export function QuickAddLeadModal({
 
   useEffect(() => {
     if (!isOpen) return
-    // Se só existe 1 corretor na lista, pré-seleciona
-    const opts = toSelectOptions(corretores)
-    if (opts.length === 1 && !formData.corretorId && !formData.corretor) {
-      const only = opts[0]
-      setFormData((prev) => ({
-        ...prev,
-        corretorId: isTeamUuid(only.value) ? only.value : '',
-        corretor: only.label,
-      }))
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOpen, corretores])
+    setTipoOperacao(globalOperacao)
+  }, [isOpen, globalOperacao])
 
   const getError = (field: string) =>
     validationErrors.find((e) => e.field === field)?.message
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    const result = await submit(formData)
+    const result = await submit({
+      ...formData,
+      tipoOperacao,
+      // Se corretor vazio, garante null para ir direto à distribuição
+      corretor: formData.corretor || null,
+      corretorId: formData.corretorId || null,
+    })
 
     if (result.ok) {
       addToast('Lead criado com sucesso!', 'success')
@@ -89,6 +89,11 @@ export function QuickAddLeadModal({
 
   if (!isOpen) return null
 
+  const corretorOptions = [
+    { value: '', label: 'Sem corretor (enviar para distribuição)' },
+    ...toSelectOptions(corretores),
+  ]
+
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 p-0 sm:items-center sm:p-4">
       <div className="w-full max-h-[92dvh] overflow-y-auto rounded-t-3xl border border-white/10 bg-surface-low p-5 sm:max-w-md sm:rounded-2xl sm:p-6">
@@ -101,6 +106,35 @@ export function QuickAddLeadModal({
           >
             ×
           </button>
+        </div>
+
+        {/* Tipo de Operação */}
+        <div className="mb-4">
+          <label className="block text-label-sm text-on-surface-variant mb-1.5">
+            Tipo de Operação
+          </label>
+          <div className="grid grid-cols-2 gap-2">
+            {TIPOS_OPERACAO.map((op) => {
+              const active = tipoOperacao === op.value
+              return (
+                <button
+                  key={op.value}
+                  type="button"
+                  onClick={() => setFormData((prev) => {
+                    setTipoOperacao(op.value)
+                    return { ...prev, etapa: 'lead' }
+                  })}
+                  className={`py-2 px-3 rounded-xl text-label-md font-medium transition-all ${
+                    active
+                      ? 'bg-primary text-on-primary shadow-sm'
+                      : 'bg-surface-high text-on-surface-variant hover:bg-surface-highest'
+                  }`}
+                >
+                  {op.label}
+                </button>
+              )
+            })}
+          </div>
         </div>
 
         {error && (
@@ -148,7 +182,6 @@ export function QuickAddLeadModal({
 
           <Select
             label="Corretor"
-            required
             value={formData.corretorId || formData.corretor}
             onChange={(e) => {
               const value = e.target.value
@@ -158,29 +191,15 @@ export function QuickAddLeadModal({
                 corretor: findOptionLabel(corretores, value),
               })
             }}
-            options={toSelectOptions(corretores)}
+            options={corretorOptions}
             error={getError('corretor')}
           />
-
-          {toSelectOptions(corretores).length === 0 && (
-            <p className="text-label-sm text-error">
-              Nenhum corretor disponível. Peça ao admin para ativar a equipe.
-            </p>
-          )}
 
           <Select
             label="Etapa"
             value={formData.etapa}
             onChange={(e) => setFormData({ ...formData, etapa: e.target.value })}
-            options={[
-              { value: 'lead', label: 'Lead' },
-              { value: 'analise', label: 'Análise' },
-              { value: 'aprovado', label: 'Aprovado' },
-              { value: 'especulativo', label: 'Especulativo' },
-              { value: 'realizado', label: 'Realizado' },
-              { value: 'reprovado', label: 'Reprovado' },
-              { value: 'visita', label: 'Visita' },
-            ]}
+            options={etapasPorOperacao(tipoOperacao)}
           />
 
           <Select

@@ -1,5 +1,6 @@
 import { supabase } from '@/lib/supabase'
 import { createClient } from '@/lib/supabase/client'
+import { toSnakeCase } from '@/lib/query/columns'
 import type { KanbanLead, Lead } from '@/lib/types'
 
 export interface LeadsFilters {
@@ -418,23 +419,43 @@ export async function getFilterOptions() {
   }
 }
 
+function mapToDbRow(data: Record<string, unknown>): Record<string, unknown> {
+  const row: Record<string, unknown> = {}
+  for (const [key, value] of Object.entries(data)) {
+    if (value !== undefined) {
+      row[toSnakeCase(key)] = value
+    }
+  }
+  // Se corretor/corretor_id não foram definidos, garante null para aparecer na mesa de distribuição
+  if (!row.corretor_id && !row.corretor) {
+    row.corretor_id = null
+    row.corretor = null
+    row.coordenador_id = null
+    row.coordenador = null
+  }
+  return row
+}
+
 // Criar novo lead
 export async function createLead(leadData: Partial<Lead>): Promise<Lead> {
   try {
     const id = leadData.id || `lead_${Date.now()}_${Math.random().toString(36).slice(2, 11)}`
     const now = new Date().toISOString()
 
-    const payload = {
+    const rawPayload = {
       ...leadData,
       id,
       etapa: leadData.etapa || 'lead',
+      tipoOperacao: leadData.tipoOperacao || 'venda',
       criadoEm: leadData.criadoEm ?? now,
       atualizadoEm: leadData.atualizadoEm ?? now,
     }
 
+    const dbPayload = mapToDbRow(rawPayload as Record<string, unknown>)
+
     const { data, error } = await supabase
       .from('leads')
-      .insert([payload])
+      .insert([dbPayload])
       .select()
       .single()
 
@@ -442,11 +463,11 @@ export async function createLead(leadData: Partial<Lead>): Promise<Lead> {
       // Insert pode ter gravado, mas o RETURNING falha se RLS de SELECT filtrar a row
       const msg = error.message || ''
       if (/0 rows|PGRST116|Cannot coerce/i.test(msg)) {
-        return payload as Lead
+        return rawPayload as Lead
       }
       throw new Error(msg || 'Falha ao criar lead')
     }
-    if (!data) return payload as Lead
+    if (!data) return rawPayload as Lead
     return data as Lead
   } catch (error) {
     console.error('Erro ao criar lead:', error)
@@ -458,14 +479,16 @@ export async function createLead(leadData: Partial<Lead>): Promise<Lead> {
 // Atualizar lead existente
 export async function updateLead(id: string, leadData: Partial<Lead>): Promise<Lead> {
   try {
-    const payload = {
+    const rawPayload = {
       ...leadData,
       atualizadoEm: new Date().toISOString(),
     }
 
+    const dbPayload = mapToDbRow(rawPayload as Record<string, unknown>)
+
     const { data, error } = await supabase
       .from('leads')
-      .update(payload)
+      .update(dbPayload)
       .eq('id', id)
       .select()
       .single()
@@ -473,11 +496,11 @@ export async function updateLead(id: string, leadData: Partial<Lead>): Promise<L
     if (error) {
       const msg = error.message || ''
       if (/0 rows|PGRST116|Cannot coerce/i.test(msg)) {
-        return { ...payload, id } as Lead
+        return { ...rawPayload, id } as Lead
       }
       throw new Error(msg || 'Falha ao atualizar lead')
     }
-    if (!data) return { ...payload, id } as Lead
+    if (!data) return { ...rawPayload, id } as Lead
     return data as Lead
   } catch (error) {
     console.error('Erro ao atualizar lead:', error)
