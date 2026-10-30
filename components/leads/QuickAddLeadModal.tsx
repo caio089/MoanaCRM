@@ -120,10 +120,10 @@ export function QuickAddLeadModal({
                 <button
                   key={op.value}
                   type="button"
-                  onClick={() => setFormData((prev) => {
-                    setTipoOperacao(op.value)
-                    return { ...prev, etapa: 'lead' }
-                  })}
+                  onClick={() => {
+                    setTipoOperacao(op.value as TipoOperacao)
+                    setFormData((prev) => ({ ...prev, etapa: 'lead' }))
+                  }}
                   className={`py-2 px-3 rounded-xl text-label-md font-medium transition-all ${
                     active
                       ? 'bg-primary text-on-primary shadow-sm'
