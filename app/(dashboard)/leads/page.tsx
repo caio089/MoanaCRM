@@ -50,7 +50,7 @@ export default function LeadsPage() {
   const [topOrigens, setTopOrigens] = useState<any[]>([])
   const [topCidades, setTopCidades] = useState<any[]>([])
   const [showAddModal, setShowAddModal] = useState(false)
-  const [editingLeadId, setEditingLeadId] = useState<string | null>(null)
+  const [editingLead, setEditingLead] = useState<Lead | null>(null)
 
   const [filters, setFilters] = useState({
     search: searchParams.get('search') || undefined,
@@ -83,7 +83,7 @@ export default function LeadsPage() {
   }
 
   const handleEditSuccess = () => {
-    setEditingLeadId(null)
+    setEditingLead(null)
     void refreshLeads()
   }
 
@@ -127,24 +127,25 @@ export default function LeadsPage() {
     const loadLeads = async () => {
       try {
         setLoading(true)
-        const { leads: data, total } = await getLeadsWithFilters(filters, {
-          page: currentPage,
-          limit: ITEMS_PER_PAGE,
-        })
-
-        setLeads(data)
-        setTotalLeads(total)
-
-        const counts = await countLeadsByEtapa(filters)
-        setTotalCount(
-          Object.values(counts).reduce((a: any, b: any) => a + b, 0)
-        )
-
-        const [corretores, origens, cidades] = await Promise.all([
+        // A tabela, os indicadores e os gráficos não devem esperar uns pelos
+        // outros. Antes estas chamadas eram encadeadas, atrasando a lista após
+        // criar ou editar um lead.
+        const [listResult, counts, corretores, origens, cidades] = await Promise.all([
+          getLeadsWithFilters(filters, {
+            page: currentPage,
+            limit: ITEMS_PER_PAGE,
+          }),
+          countLeadsByEtapa(filters),
           getTopByCorretor(undefined, filters),
           getTopByOrigem(undefined, filters),
           getTopByCidade(undefined, filters),
         ])
+
+        setLeads(listResult.leads)
+        setTotalLeads(listResult.total)
+        setTotalCount(
+          Object.values(counts).reduce((a: any, b: any) => a + b, 0)
+        )
 
         setTopCorretores(corretores)
         setTopOrigens(origens)
@@ -247,7 +248,7 @@ export default function LeadsPage() {
           currentPage={currentPage}
           itemsPerPage={ITEMS_PER_PAGE}
           onPageChange={setCurrentPage}
-          onEdit={(lead) => setEditingLeadId(lead.id || null)}
+          onEdit={setEditingLead}
           onDelete={handleDelete}
         />
       </div>
@@ -262,11 +263,12 @@ export default function LeadsPage() {
       />
 
       {/* Edit Modal */}
-      {editingLeadId && (
+      {editingLead && (
         <EditLeadModal
           isOpen={true}
-          leadId={editingLeadId}
-          onClose={() => setEditingLeadId(null)}
+          leadId={editingLead.id || ''}
+          initialLead={editingLead}
+          onClose={() => setEditingLead(null)}
           onSuccess={handleEditSuccess}
         />
       )}

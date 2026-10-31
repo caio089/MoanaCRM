@@ -46,6 +46,8 @@ const TABS = [
 interface EditLeadModalProps {
   isOpen: boolean
   leadId: string
+  /** Lead já disponível na tela que abriu o modal, para abrir sem nova leitura. */
+  initialLead?: Lead | null
   onClose: () => void
   onSuccess?: (lead: Lead) => void
 }
@@ -53,12 +55,12 @@ interface EditLeadModalProps {
 export function EditLeadModal({
   isOpen,
   leadId,
+  initialLead,
   onClose,
   onSuccess,
 }: EditLeadModalProps) {
   const [activeTab, setActiveTab] = useState('personal')
   const [showPreview, setShowPreview] = useState(false)
-  const [successMessage, setSuccessMessage] = useState('')
 
   const [filterOptions, setFilterOptions] = useState({
     corretores: [] as Array<string | { value: string; label: string; coordenadorId?: string | null }>,
@@ -68,7 +70,7 @@ export function EditLeadModal({
     origens: [] as string[],
   })
 
-  const { lead, loading, updating, error, validationErrors, submit } = useEditLead(leadId)
+  const { lead, loading, updating, error, validationErrors, submit } = useEditLead(leadId, initialLead)
   const { addToast } = useToast()
 
   const [formData, setFormData] = useState({
@@ -219,12 +221,8 @@ export function EditLeadModal({
       const result = await submit(payload)
       if (result.ok) {
         addToast('Lead atualizado com sucesso!', 'success')
-        setSuccessMessage('Lead atualizado com sucesso!')
-        setShowPreview(false)
-        setTimeout(() => {
-          onSuccess?.(result.lead)
-          onClose()
-        }, 1200)
+        onSuccess?.(result.lead)
+        onClose()
         return
       }
 
@@ -245,16 +243,6 @@ export function EditLeadModal({
     return (
       <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
         <div className="bg-surface rounded-lg p-6">Carregando...</div>
-      </div>
-    )
-  }
-
-  if (successMessage) {
-    return (
-      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-        <div className="bg-surface rounded-lg p-6 text-center">
-          <div className="text-success text-headline-sm mb-2">✅ {successMessage}</div>
-        </div>
       </div>
     )
   }

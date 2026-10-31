@@ -50,9 +50,7 @@ export function CreateLeadForm({ onSuccess }: CreateLeadFormProps) {
   const router = useRouter()
   const { addToast } = useToast()
   const [activeTab, setActiveTab] = useState('personal')
-  const [loading, setLoading] = useState(true)
   const [showPreview, setShowPreview] = useState(false)
-  const [successMessage, setSuccessMessage] = useState('')
 
   const [filterOptions, setFilterOptions] = useState({
     corretores: [] as Array<string | { value: string; label: string; coordenadorId?: string | null }>,
@@ -110,8 +108,6 @@ export function CreateLeadForm({ onSuccess }: CreateLeadFormProps) {
         setFilterOptions(options)
       } catch (err) {
         console.error('Erro ao carregar opções:', err)
-      } finally {
-        setLoading(false)
       }
     }
 
@@ -125,12 +121,8 @@ export function CreateLeadForm({ onSuccess }: CreateLeadFormProps) {
       const result = await submit(formData)
       if (result.ok) {
         addToast('Lead criado com sucesso!', 'success')
-        setSuccessMessage('Lead criado com sucesso!')
-        setShowPreview(false)
-        setTimeout(() => {
-          onSuccess?.()
-          router.push(`/leads`)
-        }, 1500)
+        onSuccess?.()
+        router.push('/leads')
         return
       }
 
@@ -151,19 +143,6 @@ export function CreateLeadForm({ onSuccess }: CreateLeadFormProps) {
 
   const getError = (field: string) => {
     return validationErrors.find((e) => e.field === field)?.message
-  }
-
-  if (loading) {
-    return <div className="text-center py-8">Carregando...</div>
-  }
-
-  if (successMessage) {
-    return (
-      <div className="max-w-2xl mx-auto p-6 text-center">
-        <div className="text-success text-headline-sm mb-4">✅ {successMessage}</div>
-        <p className="text-on-surface-variant">Redirecionando...</p>
-      </div>
-    )
   }
 
   return (

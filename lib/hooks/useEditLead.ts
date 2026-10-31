@@ -7,14 +7,23 @@ export type EditLeadResult =
   | { ok: true; lead: Lead }
   | { ok: false; error: string | null; validationErrors: ValidationError[] }
 
-export function useEditLead(leadId: string) {
-  const [lead, setLead] = useState<Lead | null>(null)
-  const [loading, setLoading] = useState(true)
+export function useEditLead(leadId: string, initialLead?: Lead | null) {
+  const [lead, setLead] = useState<Lead | null>(initialLead ?? null)
+  const [loading, setLoading] = useState(!initialLead)
   const [updating, setUpdating] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [validationErrors, setValidationErrors] = useState<ValidationError[]>([])
 
   useEffect(() => {
+    // Na lista e na ficha o lead já está em memória. Usá-lo evita uma requisição
+    // extra antes de abrir o formulário; o salvamento continua validado no banco.
+    if (initialLead?.id === leadId) {
+      setLead(initialLead)
+      setLoading(false)
+      setError(null)
+      return
+    }
+
     const load = async () => {
       try {
         setLoading(true)
@@ -30,7 +39,7 @@ export function useEditLead(leadId: string) {
     }
 
     if (leadId) void load()
-  }, [leadId])
+  }, [leadId, initialLead])
 
   const submit = async (formData: Record<string, unknown>): Promise<EditLeadResult> => {
     setUpdating(true)

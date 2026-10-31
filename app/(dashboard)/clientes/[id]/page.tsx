@@ -234,6 +234,7 @@ export default function ClientePage() {
         <EditLeadModal
           isOpen
           leadId={lead.id}
+          initialLead={lead}
           onClose={() => setEditing(false)}
           onSuccess={() => {
             setEditing(false)

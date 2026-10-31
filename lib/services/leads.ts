@@ -453,22 +453,16 @@ export async function createLead(leadData: Partial<Lead>): Promise<Lead> {
 
     const dbPayload = mapToDbRow(rawPayload as Record<string, unknown>)
 
-    const { data, error } = await supabase
+    // Não precisamos devolver a linha recém-criada: já temos o payload completo
+    // no cliente. Isso reduz trabalho e dados trafegados na confirmação do save.
+    const { error } = await supabase
       .from('leads')
       .insert([dbPayload])
-      .select()
-      .single()
 
     if (error) {
-      // Insert pode ter gravado, mas o RETURNING falha se RLS de SELECT filtrar a row
-      const msg = error.message || ''
-      if (/0 rows|PGRST116|Cannot coerce/i.test(msg)) {
-        return rawPayload as Lead
-      }
-      throw new Error(msg || 'Falha ao criar lead')
+      throw new Error(error.message || 'Falha ao criar lead')
     }
-    if (!data) return rawPayload as Lead
-    return data as Lead
+    return rawPayload as Lead
   } catch (error) {
     console.error('Erro ao criar lead:', error)
     if (error instanceof Error) throw error
@@ -486,22 +480,17 @@ export async function updateLead(id: string, leadData: Partial<Lead>): Promise<L
 
     const dbPayload = mapToDbRow(rawPayload as Record<string, unknown>)
 
-    const { data, error } = await supabase
+    // Assim como na criação, usamos o payload local em vez de devolver a linha
+    // inteira. A tela atualiza assim que o banco confirma a escrita.
+    const { error } = await supabase
       .from('leads')
       .update(dbPayload)
       .eq('id', id)
-      .select()
-      .single()
 
     if (error) {
-      const msg = error.message || ''
-      if (/0 rows|PGRST116|Cannot coerce/i.test(msg)) {
-        return { ...rawPayload, id } as Lead
-      }
-      throw new Error(msg || 'Falha ao atualizar lead')
+      throw new Error(error.message || 'Falha ao atualizar lead')
     }
-    if (!data) return { ...rawPayload, id } as Lead
-    return data as Lead
+    return { ...rawPayload, id } as Lead
   } catch (error) {
     console.error('Erro ao atualizar lead:', error)
     if (error instanceof Error) throw error
