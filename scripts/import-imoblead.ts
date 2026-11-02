@@ -148,7 +148,7 @@ async function run() {
       corretor: isDistribution ? null : 'Base Histórica',
       corretor_id: null,
       origem: 'Imoblead',
-      tipo_operacao: 'venda',
+      tipo_operacao: 'aluguel',
       cidade: 'Teresina',
       observacao: notas,
     })

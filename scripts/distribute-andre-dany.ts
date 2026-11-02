@@ -185,7 +185,7 @@ async function run() {
         corretor: CORRETORES.andre.nome,
         corretor_id: CORRETORES.andre.id,
         origem: 'Imoblead',
-        tipo_operacao: 'venda',
+        tipo_operacao: 'aluguel',
         cidade: 'Teresina',
         observacao: notas,
       })
@@ -233,7 +233,7 @@ async function run() {
         corretor: CORRETORES.dany.nome,
         corretor_id: CORRETORES.dany.id,
         origem: 'Imoblead',
-        tipo_operacao: 'venda',
+        tipo_operacao: 'aluguel',
         cidade: 'Teresina',
         observacao: notas,
       })
@@ -284,7 +284,7 @@ async function run() {
         corretor: CORRETORES.dany.nome,
         corretor_id: CORRETORES.dany.id,
         origem: 'Imoblead',
-        tipo_operacao: 'venda',
+        tipo_operacao: 'aluguel',
         cidade: 'Teresina',
         observacao: notas,
       })
