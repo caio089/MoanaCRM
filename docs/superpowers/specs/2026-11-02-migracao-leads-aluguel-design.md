@@ -31,3 +31,4 @@ Atualmente, a base de dados do MoanaCRM possui 120 leads cadastrados, sendo 119 
 2. Verificar se o arquivo de backup foi criado com os 120 registros intactos.
 3. Consultar a tabela `leads` no Supabase e validar as contagens por `tipo_operacao`.
 4. Executar verificação estática/linting ou checagem de tipos com `npx tsc --noEmit` para garantir que nenhum script quebrou tipagem.
+
