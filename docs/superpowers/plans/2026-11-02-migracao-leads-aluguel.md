@@ -25,7 +25,7 @@
 - Consumes: Tabela `leads` no Supabase (`id`, `tipo_operacao`, etc.).
 - Produces: Arquivo de backup em `data/backups/` e atualização dos registros no Supabase para `tipo_operacao = 'aluguel'`.
 
-- [ ] **Step 1: Criar o script de migração e validação**
+- [x] **Step 1: Criar o script de migração e validação**
 
 Criar `scripts/update-leads-to-aluguel.ts`:
 
@@ -105,12 +105,12 @@ run().catch((err) => {
 })
 ```
 
-- [ ] **Step 2: Executar o script de migração**
+- [x] **Step 2: Executar o script de migração**
 
 Run: `npx tsx scripts/update-leads-to-aluguel.ts`  
 Expected: `🎉 SUCESSO: Todos os leads foram migrados para aluguel!` com 120 aluguel e 0 venda.
 
-- [ ] **Step 3: Commit do script de migração**
+- [x] **Step 3: Commit do script de migração**
 
 ```bash
 git add scripts/update-leads-to-aluguel.ts
@@ -129,7 +129,7 @@ git commit -m "feat: add lead migration script to aluguel and execute migration"
 - Consumes: Tipos e chamadas de insert/update nos scripts de automação.
 - Produces: Scripts configurados com `tipo_operacao: 'aluguel'`.
 
-- [ ] **Step 1: Atualizar `scripts/import-imoblead.ts`**
+- [x] **Step 1: Atualizar `scripts/import-imoblead.ts`**
 
 Substituir na montagem do lead (`leadsToInsert.push`):
 ```typescript
@@ -138,19 +138,20 @@ Substituir na montagem do lead (`leadsToInsert.push`):
       cidade: 'Teresina',
 ```
 
-- [ ] **Step 2: Atualizar `scripts/distribute-andre-dany.ts`**
+- [x] **Step 2: Atualizar `scripts/distribute-andre-dany.ts`**
 
 Localizar todas as atribuições `tipo_operacao: 'venda'` em `scripts/distribute-andre-dany.ts` e alterar para `tipo_operacao: 'aluguel'`.
 
-- [ ] **Step 3: Checar tipagem TypeScript de todo o projeto**
+- [x] **Step 3: Checar tipagem TypeScript de todo o projeto**
 
 Run: `npx tsc --noEmit`  
 Expected: Código 0 (sem erros de compilação/tipagem).
 
-- [ ] **Step 4: Commit e Push das alterações dos scripts**
+- [x] **Step 4: Commit e Push das alterações dos scripts**
 
 ```bash
 git add scripts/import-imoblead.ts scripts/distribute-andre-dany.ts
 git commit -m "feat: default lead operation type to aluguel in import and distribution scripts"
 git push origin main
 ```
+
