@@ -72,17 +72,25 @@ async function groupLeads(field: GroupField, filters?: LeadsFilters, etapa?: str
     if (typeof value === 'string' && value.trim()) payload[key] = value.trim()
   }
 
-  const { data, error } = await createClient().rpc('leads_group_count', {
-    p_field: field,
-    p_filters: payload,
-  })
-  if (error) throw new Error(error.message)
+  try {
+    const { data, error } = await createClient().rpc('leads_group_count', {
+      p_field: field,
+      p_filters: payload,
+    })
+    if (error) {
+      console.warn(`leads_group_count(${field}) aviso:`, error.message)
+      return []
+    }
 
-  return ((data ?? []) as Array<{ label: string; total: number | string; vgv: number | string }>).map((row) => ({
-    label: row.label,
-    total: Number(row.total) || 0,
-    vgv: Number(row.vgv) || 0,
-  }))
+    return ((data ?? []) as Array<{ label: string; total: number | string; vgv: number | string }>).map((row) => ({
+      label: row.label,
+      total: Number(row.total) || 0,
+      vgv: Number(row.vgv) || 0,
+    }))
+  } catch (err) {
+    console.warn(`Falha ao agrupar leads por ${field}:`, err)
+    return []
+  }
 }
 
 function toRecord(rows: GroupRow[], metric: 'total' | 'vgv'): Record<string, number> {
@@ -165,7 +173,7 @@ export async function countLeadsByEtapa(filters?: LeadsFilters) {
     return toRecord(await groupLeads('etapa', { ...filters, etapa: undefined }), 'total')
   } catch (error) {
     console.error('Erro ao contar leads por etapa:', error)
-    throw error
+    return {}
   }
 }
 
@@ -175,7 +183,7 @@ export async function sumVGVByEtapa(filters?: LeadsFilters) {
     return toRecord(await groupLeads('etapa', { ...filters, etapa: undefined }), 'vgv')
   } catch (error) {
     console.error('Erro ao somar VGV por etapa:', error)
-    throw error
+    return {}
   }
 }
 
@@ -446,7 +454,7 @@ export async function createLead(leadData: Partial<Lead>): Promise<Lead> {
       ...leadData,
       id,
       etapa: leadData.etapa || 'lead',
-      tipoOperacao: leadData.tipoOperacao || 'venda',
+      tipoOperacao: leadData.tipoOperacao || 'aluguel',
       criadoEm: leadData.criadoEm ?? now,
       atualizadoEm: leadData.atualizadoEm ?? now,
     }

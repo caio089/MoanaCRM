@@ -3,7 +3,7 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
 import { isTipoOperacao, type TipoOperacao } from '@/lib/constants/operacao'
 
-const STORAGE_KEY = 'moanacrm-operacao-v1'
+const STORAGE_KEY = 'moanacrm-operacao-v2'
 
 type OperacaoContextValue = {
   tipoOperacao: TipoOperacao
@@ -13,7 +13,7 @@ type OperacaoContextValue = {
 const OperacaoContext = createContext<OperacaoContextValue | undefined>(undefined)
 
 export function OperacaoProvider({ children }: { children: ReactNode }) {
-  const [tipoOperacao, setTipoOperacaoState] = useState<TipoOperacao>('venda')
+  const [tipoOperacao, setTipoOperacaoState] = useState<TipoOperacao>('aluguel')
 
   useEffect(() => {
     try {

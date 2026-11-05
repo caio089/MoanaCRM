@@ -10,7 +10,7 @@ import { PageHeading } from '@/components/ui/PageHeading'
 import { OperacaoToggle } from '@/components/ui/OperacaoToggle'
 import { etapaLabel } from '@/lib/constants/operacao'
 import { useOperacao } from '@/lib/contexts/OperacaoContext'
-import { getLeadsWithFilters, getFilterOptions, getTopByTipoRenda, getTopByComprovacao, getTopByCorretor, getTopByConstrutora, getTopByOrigem, getTopByCoordenador } from '@/lib/services/leads'
+import { getLeadsWithFilters, getFilterOptions, getTopByTipoRenda, getTopByComprovacao, getTopByCorretor, getTopByConstrutora, getTopByOrigem, getTopByCoordenador, getTimelineByEtapa } from '@/lib/services/leads'
 import type { Lead } from '@/lib/types'
 
 const ITEMS_PER_PAGE = 50
@@ -22,6 +22,7 @@ export default function AnalisesPage() {
   const [loading, setLoading] = useState(true)
   const [currentPage, setCurrentPage] = useState(1)
   const [filterOptions, setFilterOptions] = useState<any>({})
+  const [timelineData, setTimelineData] = useState<any[]>([])
   const [topTipoRenda, setTopTipoRenda] = useState<any[]>([])
   const [topComprovacao, setTopComprovacao] = useState<any[]>([])
   const [topCorretores, setTopCorretores] = useState<any[]>([])
@@ -59,13 +60,14 @@ export default function AnalisesPage() {
         setLeads(data)
         setTotalLeads(total)
 
-        const [tipoRenda, comprovacao, corretores, construtoras, origens, coordenadores] = await Promise.all([
+        const [tipoRenda, comprovacao, corretores, construtoras, origens, coordenadores, timeline] = await Promise.all([
           getTopByTipoRenda('analise', filters),
           getTopByComprovacao('analise', filters),
           getTopByCorretor('analise', filters),
           getTopByConstrutora('analise', filters),
           getTopByOrigem('analise', filters),
           getTopByCoordenador('analise', filters),
+          getTimelineByEtapa('analise', filters),
         ])
 
         setTopTipoRenda(tipoRenda)
@@ -74,6 +76,7 @@ export default function AnalisesPage() {
         setTopConstrutoras(construtoras)
         setTopOrigens(origens)
         setTopCoordenadores(coordenadores)
+        setTimelineData(timeline)
       } catch (error) {
         console.error('Erro:', error)
       } finally {
@@ -100,14 +103,7 @@ export default function AnalisesPage() {
 
       <MetricsRow metrics={[{ label: 'Quantidade', value: totalLeads }]} />
 
-      <TimelineChart data={[
-        { name: 'jan/25', value: 12 },
-        { name: 'fev/25', value: 19 },
-        { name: 'mar/25', value: 15 },
-        { name: 'abr/25', value: 25 },
-        { name: 'mai/25', value: 22 },
-        { name: 'jun/26', value: 30 },
-      ]} title="Quantidade | Mês" height={300} />
+      <TimelineChart data={timelineData} title="Quantidade | Mês" height={300} />
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
         <AnalysisCard title="Quantidade | Tipo de Renda" data={topTipoRenda.length > 0 ? topTipoRenda : []} />

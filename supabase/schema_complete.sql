@@ -1877,6 +1877,11 @@ BEGIN
       AND ($1->>'cidade' IS NULL OR l.cidade = $1->>'cidade')
       AND ($1->>'origem' IS NULL OR l.origem = $1->>'origem')
       AND ($1->>'situacao' IS NULL OR l.situacao_reprovado = $1->>'situacao')
+      AND (
+        coalesce($1->>'tipoOperacao', $1->>'tipo_operacao') IS NULL
+        OR coalesce($1->>'tipoOperacao', $1->>'tipo_operacao') = ''
+        OR l.tipo_operacao = coalesce($1->>'tipoOperacao', $1->>'tipo_operacao')
+      )
       AND ($1->>'dataInicio' IS NULL OR l.criado_em >= ($1->>'dataInicio')::date)
       AND ($1->>'dataFim' IS NULL OR l.criado_em < ($1->>'dataFim')::date + 1)
       AND ($1->>'search' IS NULL

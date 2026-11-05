@@ -69,7 +69,8 @@ export default function KanbanPage() {
     })()
 
     const filtered = leads.filter((lead) => {
-      if ((lead.tipoOperacao ?? 'venda') !== tipoOperacao) return false
+      const op = (lead as any).tipo_operacao || lead.tipoOperacao || 'aluguel'
+      if (op !== tipoOperacao) return false
       if (corretorLabel && lead.corretor !== corretorLabel) return false
       if (filters.etapa && lead.etapa !== filters.etapa) return false
       if (filters.cidade && lead.cidade !== filters.cidade) return false

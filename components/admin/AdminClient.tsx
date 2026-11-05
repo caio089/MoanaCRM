@@ -56,7 +56,7 @@ export function AdminClient({ initialLeads, onLeadsChange }: AdminClientProps) {
             construtora: dados.construtora || null,
             origem: dados.origem || null,
             vgv: dados.vgv ? parseFloat(String(dados.vgv)) : null,
-            tipo_operacao: dados.tipoOperacao || 'venda',
+            tipo_operacao: dados.tipoOperacao || 'aluguel',
             criado_em: agora.toISOString(),
             atualizado_em: agora.toISOString(),
           },
@@ -104,7 +104,7 @@ export function AdminClient({ initialLeads, onLeadsChange }: AdminClientProps) {
           construtora: dados.construtora || null,
           origem: dados.origem || null,
           vgv: dados.vgv ? parseFloat(String(dados.vgv)) : null,
-          tipo_operacao: dados.tipoOperacao || 'venda',
+          tipo_operacao: dados.tipoOperacao || 'aluguel',
           atualizado_em: agora.toISOString(),
         })
         .eq('id', id)

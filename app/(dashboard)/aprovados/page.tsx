@@ -10,7 +10,7 @@ import { PageHeading } from '@/components/ui/PageHeading'
 import { OperacaoToggle } from '@/components/ui/OperacaoToggle'
 import { etapaLabel } from '@/lib/constants/operacao'
 import { useOperacao } from '@/lib/contexts/OperacaoContext'
-import { getLeadsWithFilters, getFilterOptions, getTopByCorretor, getTopByConstrutora, getTopByCoordenador, getTopByCidade } from '@/lib/services/leads'
+import { getLeadsWithFilters, getFilterOptions, getTopByCorretor, getTopByConstrutora, getTopByCoordenador, getTopByCidade, getTimelineByEtapa } from '@/lib/services/leads'
 import type { Lead } from '@/lib/types'
 
 const ITEMS_PER_PAGE = 50
@@ -23,6 +23,7 @@ export default function AprovadosPage() {
   const [currentPage, setCurrentPage] = useState(1)
   const [filterOptions, setFilterOptions] = useState<any>({})
   const [totalVGV, setTotalVGV] = useState(0)
+  const [timelineData, setTimelineData] = useState<any[]>([])
   const [topCorretores, setTopCorretores] = useState<any[]>([])
   const [topConstrutoras, setTopConstrutoras] = useState<any[]>([])
   const [topCoordenadores, setTopCoordenadores] = useState<any[]>([])
@@ -61,17 +62,19 @@ export default function AprovadosPage() {
         const vgv = data.reduce((sum, l) => sum + (Number(l.vgv) || 0), 0)
         setTotalVGV(vgv)
 
-        const [corretores, construtoras, coordenadores, cidades] = await Promise.all([
+        const [corretores, construtoras, coordenadores, cidades, timeline] = await Promise.all([
           getTopByCorretor('aprovado', filters),
           getTopByConstrutora('aprovado', filters),
           getTopByCoordenador('aprovado', filters),
           getTopByCidade('aprovado', filters),
+          getTimelineByEtapa('aprovado', filters),
         ])
 
         setTopCorretores(corretores)
         setTopConstrutoras(construtoras)
         setTopCoordenadores(coordenadores)
         setTopCidades(cidades)
+        setTimelineData(timeline)
         setTopZonas([]) // TODO: Implement getTopByZona if needed
       } catch (error) {
         console.error('Erro:', error)
@@ -104,7 +107,7 @@ export default function AprovadosPage() {
         ]}
       />
 
-      <TimelineChart data={[{ name: 'jan/25', value: 8 }, { name: 'fev/25', value: 12 }, { name: 'mar/25', value: 10 }, { name: 'abr/25', value: 18 }, { name: 'mai/25', value: 15 }, { name: 'jun/26', value: 20 }]} title="Quantidade | Mês" height={300} />
+      <TimelineChart data={timelineData} title="Quantidade | Mês" height={300} />
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
         <AnalysisCard title="Quantidade | Corretor" data={topCorretores.length > 0 ? topCorretores : []} />

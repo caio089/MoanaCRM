@@ -20,6 +20,7 @@ import {
   getTopByCorretor,
   getTopByOrigem,
   getTopByCidade,
+  getTimelineByEtapa,
   deleteLead,
 } from '@/lib/services/leads'
 import type { Lead } from '@/lib/types'
@@ -130,7 +131,7 @@ export default function LeadsPage() {
         // A tabela, os indicadores e os gráficos não devem esperar uns pelos
         // outros. Antes estas chamadas eram encadeadas, atrasando a lista após
         // criar ou editar um lead.
-        const [listResult, counts, corretores, origens, cidades] = await Promise.all([
+        const [listResult, counts, corretores, origens, cidades, timeline] = await Promise.all([
           getLeadsWithFilters(filters, {
             page: currentPage,
             limit: ITEMS_PER_PAGE,
@@ -139,6 +140,7 @@ export default function LeadsPage() {
           getTopByCorretor(undefined, filters),
           getTopByOrigem(undefined, filters),
           getTopByCidade(undefined, filters),
+          getTimelineByEtapa(undefined, filters),
         ])
 
         setLeads(listResult.leads)
@@ -150,16 +152,7 @@ export default function LeadsPage() {
         setTopCorretores(corretores)
         setTopOrigens(origens)
         setTopCidades(cidades)
-
-        const mockTimeline = [
-          { name: 'jan/25', value: 45 },
-          { name: 'fev/25', value: 52 },
-          { name: 'mar/25', value: 48 },
-          { name: 'abr/25', value: 61 },
-          { name: 'mai/25', value: 55 },
-          { name: 'jun/26', value: 67 },
-        ]
-        setTimelineData(mockTimeline)
+        setTimelineData(timeline)
       } catch (error) {
         console.error('Erro ao carregar leads:', error)
       } finally {
@@ -177,30 +170,6 @@ export default function LeadsPage() {
     { key: 'telefone', label: 'Telefone' },
     { key: 'cidade', label: 'Cidade' },
     { key: 'origem', label: 'Origem' },
-  ]
-
-  const mockCorretores = [
-    { label: 'Equipe Norte', value: 345 },
-    { label: 'Equipe Sul', value: 287 },
-    { label: 'Equipe Centro', value: 256 },
-    { label: 'Construtora Moana', value: 189 },
-    { label: 'Equipe Leste', value: 145 },
-  ]
-
-  const mockOrigens = [
-    { label: 'Whatsapp', value: 545 },
-    { label: 'Site', value: 536 },
-    { label: 'Google Ads', value: 523 },
-    { label: 'Facebook Ads', value: 510 },
-    { label: 'Portal Imóvel Web', value: 487 },
-  ]
-
-  const mockCidades = [
-    { label: 'Campo Maior', value: 387 },
-    { label: 'Picos', value: 379 },
-    { label: 'Altos', value: 369 },
-    { label: 'União', value: 368 },
-    { label: 'Teresina', value: 364 },
   ]
 
   return (
@@ -233,9 +202,9 @@ export default function LeadsPage() {
       <TimelineChart data={timelineData} title="Quantidade | Mês" height={300} />
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
-        <AnalysisCard title="Quantidade | Corretor" data={topCorretores.length > 0 ? topCorretores : mockCorretores} />
-        <AnalysisCard title="Quantidade | Origem" data={topOrigens.length > 0 ? topOrigens : mockOrigens} />
-        <AnalysisCard title="Quantidade | Cidade" data={topCidades.length > 0 ? topCidades : mockCidades} />
+        <AnalysisCard title="Quantidade | Corretor" data={topCorretores} />
+        <AnalysisCard title="Quantidade | Origem" data={topOrigens} />
+        <AnalysisCard title="Quantidade | Cidade" data={topCidades} />
       </div>
 
       <div>

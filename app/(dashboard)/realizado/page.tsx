@@ -10,7 +10,7 @@ import { PageHeading } from '@/components/ui/PageHeading'
 import { OperacaoToggle } from '@/components/ui/OperacaoToggle'
 import { etapaLabel } from '@/lib/constants/operacao'
 import { useOperacao } from '@/lib/contexts/OperacaoContext'
-import { getLeadsWithFilters, getFilterOptions, getTopByCorretor, getTopByVGVCorretor, getTopByConstrutora, getTopByModalidade, getTopByCidade, getTopByTipo } from '@/lib/services/leads'
+import { getLeadsWithFilters, getFilterOptions, getTopByCorretor, getTopByVGVCorretor, getTopByConstrutora, getTopByModalidade, getTopByCidade, getTopByTipo, getTimelineByEtapa } from '@/lib/services/leads'
 import type { Lead } from '@/lib/types'
 
 const ITEMS_PER_PAGE = 50
@@ -23,6 +23,7 @@ export default function RealizadoPage() {
   const [currentPage, setCurrentPage] = useState(1)
   const [filterOptions, setFilterOptions] = useState<any>({})
   const [totalVGV, setTotalVGV] = useState(0)
+  const [timelineData, setTimelineData] = useState<any[]>([])
   const [topCorretores, setTopCorretores] = useState<any[]>([])
   const [topVGVCorretores, setTopVGVCorretores] = useState<any[]>([])
   const [topConstrutoras, setTopConstrutoras] = useState<any[]>([])
@@ -62,13 +63,14 @@ export default function RealizadoPage() {
         const vgv = data.reduce((sum, l) => sum + (Number(l.vgv) || 0), 0)
         setTotalVGV(vgv)
 
-        const [corretores, vgvCorretores, construtoras, modalidade, cidades, tipos] = await Promise.all([
+        const [corretores, vgvCorretores, construtoras, modalidade, cidades, tipos, timeline] = await Promise.all([
           getTopByCorretor('realizado', filters),
           getTopByVGVCorretor('realizado', filters),
           getTopByConstrutora('realizado', filters),
           getTopByModalidade('realizado', filters),
           getTopByCidade('realizado', filters),
           getTopByTipo('realizado', filters),
+          getTimelineByEtapa('realizado', filters),
         ])
 
         setTopCorretores(corretores)
@@ -77,6 +79,7 @@ export default function RealizadoPage() {
         setTopModalidade(modalidade)
         setTopCidades(cidades)
         setTopTipos(tipos)
+        setTimelineData(timeline)
       } catch (error) {
         console.error('Erro:', error)
       } finally {
@@ -108,7 +111,7 @@ export default function RealizadoPage() {
         ]}
       />
 
-      <TimelineChart data={[{ name: 'jan/25', value: 5 }, { name: 'fev/25', value: 8 }, { name: 'mar/25', value: 6 }, { name: 'abr/25', value: 12 }, { name: 'mai/25', value: 10 }, { name: 'jun/26', value: 15 }]} title="Quantidade | Mês" height={300} />
+      <TimelineChart data={timelineData} title="Quantidade | Mês" height={300} />
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
         <AnalysisCard title="Quantidade | Corretor" data={topCorretores.length > 0 ? topCorretores : []} />
