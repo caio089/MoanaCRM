@@ -64,3 +64,4 @@ $$;
 
 REVOKE ALL ON FUNCTION public.leads_group_count(text, jsonb) FROM public, anon;
 GRANT EXECUTE ON FUNCTION public.leads_group_count(text, jsonb) TO authenticated;
+
