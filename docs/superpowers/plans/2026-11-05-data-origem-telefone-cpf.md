@@ -125,5 +125,5 @@
 - [x] **Step 1: Executar `npx tsc --noEmit`**
 - [x] **Step 2: Executar `npm run lint`**
 - [x] **Step 3: Limpar arquivos de script temporários**
-- [ ] **Step 4: Realizar commit das alterações**
-- [ ] **Step 5: Enviar alterações para o GitHub com `git push origin main`**
+- [x] **Step 4: Realizar commit das alterações**
+- [x] **Step 5: Enviar alterações para o GitHub com `git push origin main`**
