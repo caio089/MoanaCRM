@@ -1,6 +1,6 @@
 import { supabase } from '@/lib/supabase'
 import { createClient } from '@/lib/supabase/client'
-import { toSnakeCase } from '@/lib/query/columns'
+import { toSnakeCase, dualCaseRow } from '@/lib/query/columns'
 import type { KanbanLead, Lead } from '@/lib/types'
 
 export interface LeadsFilters {
@@ -158,7 +158,7 @@ export async function getLeadsWithFilters(
     if (error) throw error
 
     return {
-      leads: (data || []) as Lead[],
+      leads: ((data || []) as Array<Record<string, unknown>>).map((row) => dualCaseRow(row) as Lead),
       total: count || 0,
     }
   } catch (error) {
@@ -444,6 +444,12 @@ function mapToDbRow(data: Record<string, unknown>): Record<string, unknown> {
   return row
 }
 
+function isMissingColumnError(err: unknown): boolean {
+  if (!err || typeof err !== 'object') return false
+  const e = err as { code?: string; message?: string }
+  return e.code === 'PGRST204' || (typeof e.message === 'string' && e.message.includes('data_origem'))
+}
+
 // Criar novo lead
 export async function createLead(leadData: Partial<Lead>): Promise<Lead> {
   try {
@@ -461,11 +467,18 @@ export async function createLead(leadData: Partial<Lead>): Promise<Lead> {
 
     const dbPayload = mapToDbRow(rawPayload as Record<string, unknown>)
 
-    // Não precisamos devolver a linha recém-criada: já temos o payload completo
-    // no cliente. Isso reduz trabalho e dados trafegados na confirmação do save.
-    const { error } = await supabase
+    let { error } = await supabase
       .from('leads')
       .insert([dbPayload])
+
+    // Se o schema remoto ainda não tiver a coluna data_origem, tenta salvar sem ela
+    if (error && isMissingColumnError(error) && 'data_origem' in dbPayload) {
+      console.warn('Coluna data_origem ainda não aplicada no Supabase. Inserindo sem ela...')
+      const fallbackPayload = { ...dbPayload }
+      delete fallbackPayload.data_origem
+      const retry = await supabase.from('leads').insert([fallbackPayload])
+      error = retry.error
+    }
 
     if (error) {
       throw new Error(error.message || 'Falha ao criar lead')
@@ -488,12 +501,19 @@ export async function updateLead(id: string, leadData: Partial<Lead>): Promise<L
 
     const dbPayload = mapToDbRow(rawPayload as Record<string, unknown>)
 
-    // Assim como na criação, usamos o payload local em vez de devolver a linha
-    // inteira. A tela atualiza assim que o banco confirma a escrita.
-    const { error } = await supabase
+    let { error } = await supabase
       .from('leads')
       .update(dbPayload)
       .eq('id', id)
+
+    // Se o schema remoto ainda não tiver a coluna data_origem, tenta salvar sem ela
+    if (error && isMissingColumnError(error) && 'data_origem' in dbPayload) {
+      console.warn('Coluna data_origem ainda não aplicada no Supabase. Atualizando sem ela...')
+      const fallbackPayload = { ...dbPayload }
+      delete fallbackPayload.data_origem
+      const retry = await supabase.from('leads').update(fallbackPayload).eq('id', id)
+      error = retry.error
+    }
 
     if (error) {
       throw new Error(error.message || 'Falha ao atualizar lead')
@@ -516,7 +536,7 @@ export async function getLeadById(id: string): Promise<Lead> {
       .single()
 
     if (error) throw error
-    return data as Lead
+    return dualCaseRow(data as Record<string, unknown>) as Lead
   } catch (error) {
     console.error('Erro ao buscar lead:', error)
     throw error

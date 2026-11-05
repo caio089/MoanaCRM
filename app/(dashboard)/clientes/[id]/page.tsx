@@ -28,12 +28,27 @@ const EditLeadModal = dynamic(
   { ssr: false },
 )
 
-function formatDate(value: string | Date | null | undefined) {
+function formatDate(value: unknown) {
   if (!value) return 'Não informado'
+  const date = new Date(value as string | number | Date)
+  if (Number.isNaN(date.getTime())) return 'Não informado'
   return new Intl.DateTimeFormat('pt-BR', {
     dateStyle: 'long',
     timeStyle: 'short',
-  }).format(new Date(value))
+  }).format(date)
+}
+
+function formatDateOnly(value: unknown) {
+  if (!value) return 'Não informado'
+  if (typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    const [year, month, day] = value.split('-')
+    return `${day}/${month}/${year}`
+  }
+  const date = new Date(value as string | number | Date)
+  if (Number.isNaN(date.getTime())) return 'Não informado'
+  return new Intl.DateTimeFormat('pt-BR', {
+    dateStyle: 'long',
+  }).format(date)
 }
 
 function InfoItem({ label, value }: { label: string; value: React.ReactNode }) {
@@ -99,7 +114,7 @@ export default function ClientePage() {
       <PageHeading
         eyebrow="Ficha do cliente"
         title={lead.nome}
-        description={`Cadastro ${lead.id} · atualizado em ${formatDate(lead.atualizadoEm)}`}
+        description={`Cadastro ${lead.id} · atualizado em ${formatDate(lead.atualizadoEm || lead.atualizado_em)}`}
         actions={(
           <>
             <button type="button" onClick={() => router.back()} className="chip">← Voltar</button>
@@ -174,6 +189,7 @@ export default function ClientePage() {
         <InfoItem label="Construtora" value={lead.construtora} />
         <InfoItem label="Correspondente" value={lead.correspondente} />
         <InfoItem label="Origem" value={lead.origem} />
+        <InfoItem label="Data de origem" value={formatDateOnly(lead.dataOrigem || lead.data_origem)} />
         <InfoItem label="ID Imobilead" value={lead.idImobilead} />
       </Section>
 
@@ -217,12 +233,12 @@ export default function ClientePage() {
       )}
 
       <Section title="Renda e processo">
-        <InfoItem label="Tipo de renda" value={lead.tipoRenda} />
+        <InfoItem label="Tipo de renda" value={lead.tipoRenda || (lead as any).tipo_renda} />
         <InfoItem label="Comprovação" value={lead.comprovacao} />
         <InfoItem label="CCV" value={lead.ccv ? 'Sim' : 'Não'} />
-        <InfoItem label="Situação da reprovação" value={lead.situacaoReprovado} />
-        <InfoItem label="Criado em" value={formatDate(lead.criadoEm)} />
-        <InfoItem label="Atualizado em" value={formatDate(lead.atualizadoEm)} />
+        <InfoItem label="Situação da reprovação" value={lead.situacaoReprovado || (lead as any).situacao_reprovado} />
+        <InfoItem label="Criado em" value={formatDate(lead.criadoEm || lead.criado_em)} />
+        <InfoItem label="Atualizado em" value={formatDate(lead.atualizadoEm || lead.atualizado_em)} />
       </Section>
 
       <section className="card">

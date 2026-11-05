@@ -111,6 +111,7 @@ CREATE TABLE IF NOT EXISTS public.leads (
   correspondente text,
   situacao_reprovado text,
   observacao text,
+  data_origem date,
   id_imobilead text UNIQUE,
   criado_em timestamptz NOT NULL,
   atualizado_em timestamptz NOT NULL,
@@ -2082,3 +2083,11 @@ CREATE INDEX IF NOT EXISTS idx_leads_bairro_id ON public.leads (bairro_id);
 
 COMMENT ON COLUMN public.leads.tipo_operacao IS 'venda = funil de financiamento; aluguel = funil de locação';
 COMMENT ON COLUMN public.leads.valor_locacao_mensal IS 'Aluguel mensal. VGA = valor_locacao_mensal * prazo_contrato_meses';
+
+-- ============================================================
+-- FILE: 20261105190000_add_data_origem_to_leads.sql
+-- ============================================================
+ALTER TABLE public.leads 
+  ADD COLUMN IF NOT EXISTS data_origem date;
+
+COMMENT ON COLUMN public.leads.data_origem IS 'Data do primeiro contato do lead (Data de origem)';

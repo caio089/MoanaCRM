@@ -51,9 +51,14 @@ export interface Lead extends Record<string, unknown> {
   correspondente: string | null
   situacaoReprovado: string | null
   observacao: string | null
+  /** Data do primeiro contato do lead (Data de origem) */
+  dataOrigem?: string | Date | null
+  data_origem?: string | Date | null
   idImobilead: string | null
   criadoEm: string | Date
+  criado_em?: string | Date
   atualizadoEm: string | Date
+  atualizado_em?: string | Date
   /** FK tipada (nullable) */
   coordenadorId?: string | null
   /** FK tipada (nullable) */
@@ -98,7 +103,9 @@ export interface Coordenador {
   /** Vínculo com auth.users — login do coordenador */
   userId?: string | null
   criadoEm: string | Date
+  criado_em?: string | Date
   atualizadoEm: string | Date
+  atualizado_em?: string | Date
 }
 
 /** Cadastro de corretor vinculado a um coordenador */
@@ -112,7 +119,9 @@ export interface Corretor {
   /** Vínculo com auth.users — preenchido no self-signup */
   userId: string | null
   criadoEm: string | Date
+  criado_em?: string | Date
   atualizadoEm: string | Date
+  atualizado_em?: string | Date
 }
 
 /** Correspondente bancário (cadastro admin) */
@@ -125,7 +134,9 @@ export interface CorrespondenteBancario {
   telefone: string | null
   ativo: boolean
   criadoEm: string | Date
+  criado_em?: string | Date
   atualizadoEm: string | Date
+  atualizado_em?: string | Date
 }
 
 export interface Cidade {
@@ -134,7 +145,9 @@ export interface Cidade {
   uf: string
   ativo: boolean
   criadoEm: string | Date
+  criado_em?: string | Date
   atualizadoEm: string | Date
+  atualizado_em?: string | Date
 }
 
 export interface Bairro {
@@ -143,7 +156,9 @@ export interface Bairro {
   cidadeId: string
   ativo: boolean
   criadoEm: string | Date
+  criado_em?: string | Date
   atualizadoEm: string | Date
+  atualizado_em?: string | Date
 }
 
 export interface Construtora {
@@ -153,7 +168,9 @@ export interface Construtora {
   ativo: boolean
   origemCatalogo?: OrigemCatalogo
   criadoEm: string | Date
+  criado_em?: string | Date
   atualizadoEm: string | Date
+  atualizado_em?: string | Date
 }
 
 /** Nó da hierarquia: coordenador com seus corretores cadastrados */

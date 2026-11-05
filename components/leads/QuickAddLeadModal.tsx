@@ -42,6 +42,7 @@ export function QuickAddLeadModal({
     corretorId: '',
     etapa: 'lead',
     origem: '',
+    dataOrigem: '',
     observacao: '',
   })
 
@@ -78,6 +79,7 @@ export function QuickAddLeadModal({
         corretorId: '',
         etapa: 'lead',
         origem: '',
+        dataOrigem: '',
         observacao: '',
       })
       onClose()
@@ -155,10 +157,9 @@ export function QuickAddLeadModal({
 
           <TextInput
             label="CPF"
-            required
             value={formData.cpf}
             onChange={(e) => setFormData({ ...formData, cpf: e.target.value })}
-            placeholder="000.000.000-00"
+            placeholder="000.000.000-00 (opcional)"
             error={getError('cpf')}
           />
 
@@ -169,7 +170,7 @@ export function QuickAddLeadModal({
             onChange={(e) =>
               setFormData({ ...formData, telefone: e.target.value })
             }
-            placeholder="(00) 00000-0000"
+            placeholder="Ex: +55 (86) 98888-8888 ou +31 6 12345678"
             error={getError('telefone')}
           />
 
@@ -209,6 +210,14 @@ export function QuickAddLeadModal({
             onChange={(e) => setFormData({ ...formData, origem: e.target.value })}
             options={[...ORIGENS]}
             error={getError('origem')}
+          />
+
+          <TextInput
+            label="Data de origem (primeiro contato)"
+            type="date"
+            value={formData.dataOrigem}
+            onChange={(e) => setFormData({ ...formData, dataOrigem: e.target.value })}
+            error={getError('dataOrigem')}
           />
 
           <TextArea

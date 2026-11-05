@@ -9,16 +9,23 @@ export interface ValidationError {
   message: string
 }
 
-export function validateCPF(cpf: string): boolean {
-  if (!cpf) return false
-  const cleaned = cpf.replace(/\D/g, '')
+export function validateCPF(cpf?: string | null): boolean {
+  if (!cpf) return true
+  const trimmed = String(cpf).trim()
+  if (!trimmed) return true
+  const cleaned = trimmed.replace(/\D/g, '')
   if (cleaned.length !== 11) return false
   return true
 }
 
-export function validatePhone(phone: string): boolean {
-  const cleaned = phone.replace(/\D/g, '')
-  return cleaned.length >= 10 && cleaned.length <= 11
+export function validatePhone(phone?: string | null): boolean {
+  if (!phone) return false
+  const str = String(phone).trim()
+  if (!str) return false
+  // Aceita formatos internacionais e nacionais (+, espaços, hífens, parênteses, pontos)
+  if (!/^[\d\s+\-().]{7,30}$/.test(str)) return false
+  const digits = str.replace(/\D/g, '')
+  return digits.length >= 7 && digits.length <= 20
 }
 
 export function validateEmail(email: string): boolean {
@@ -36,17 +43,19 @@ export function validateLead(
     errors.push({ field: 'nome', message: 'Nome é obrigatório' })
   }
 
-  const cpf = data.cpf ? String(data.cpf).replace(/\D/g, '') : ''
-  if (mode === 'create' || cpf) {
-    if (!cpf || !validateCPF(cpf)) {
-      errors.push({ field: 'cpf', message: 'CPF inválido' })
+  // CPF é opcional; se preenchido, deve ser válido
+  const rawCpf = data.cpf != null ? String(data.cpf).trim() : ''
+  if (rawCpf) {
+    if (!validateCPF(rawCpf)) {
+      errors.push({ field: 'cpf', message: 'CPF inválido (deve conter 11 dígitos)' })
     }
   }
 
-  const telefone = data.telefone ? String(data.telefone).replace(/\D/g, '') : ''
-  if (mode === 'create' || telefone) {
-    if (!telefone || !validatePhone(telefone)) {
-      errors.push({ field: 'telefone', message: 'Telefone inválido' })
+  // Telefone é obrigatório (caracteres em aberto para aceitar números internacionais)
+  const rawTelefone = data.telefone != null ? String(data.telefone).trim() : ''
+  if (mode === 'create' || data.telefone !== undefined) {
+    if (!rawTelefone || !validatePhone(rawTelefone)) {
+      errors.push({ field: 'telefone', message: 'Telefone é obrigatório e deve ser válido' })
     }
   }
 
@@ -78,10 +87,23 @@ export function normalizeLeadData(data: any): Partial<Lead> {
     return Number.isNaN(n) ? null : n
   }
 
+  const formatTelefone = (tel: unknown): string | null => {
+    if (tel == null) return null
+    const str = String(tel).trim()
+    return str || null
+  }
+
+  const formatCpf = (cpf: unknown): string | null => {
+    if (cpf == null) return null
+    const cleaned = String(cpf).replace(/\D/g, '')
+    return cleaned || null
+  }
+
   return {
     nome: data.nome?.trim() || null,
-    cpf: data.cpf?.replace(/\D/g, '') || null,
-    telefone: data.telefone?.replace(/\D/g, '') || null,
+    cpf: formatCpf(data.cpf),
+    telefone: formatTelefone(data.telefone),
+    dataOrigem: data.dataOrigem || data.data_origem || null,
     cidade: data.cidade?.trim() || null,
     zona: data.zona?.trim() || null,
     corretor: data.corretor?.trim() || null,

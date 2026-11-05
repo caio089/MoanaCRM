@@ -27,6 +27,7 @@ const CAMEL_TO_SNAKE: Record<string, string> = {
   bairroId: 'bairro_id',
   cidadeId: 'cidade_id',
   origemCatalogo: 'origem_catalogo',
+  dataOrigem: 'data_origem',
 }
 
 const SNAKE_TO_CAMEL = Object.fromEntries(
@@ -83,6 +84,8 @@ const KNOWN_LEAD_FIELDS = new Set([
   'titularidade',
   'prazoContratoMeses',
   'bairroId',
+  'dataOrigem',
+  'data_origem',
 ])
 
 /** Campos permitidos em inserts/updates de equipe / correspondentes */
@@ -234,15 +237,32 @@ const OUTPUT_ALIASES: Record<string, string[]> = {
 }
 
 export function dualCaseRow(row: Record<string, unknown>): Record<string, unknown> {
+  if (!row || typeof row !== 'object') return row
   const result: Record<string, unknown> = {}
 
   for (const [key, raw] of Object.entries(row)) {
     const value = serializeValue(raw)
     result[key] = value
+
+    // Se chave for camelCase, gera a versão snake_case
     const snake = toSnakeCase(key)
-    if (snake !== key) result[snake] = value
+    if (snake !== key) {
+      result[snake] = value
+    }
+
+    // Se chave for snake_case, gera a versão camelCase
+    const camel = SNAKE_TO_CAMEL[key]
+    if (camel && camel !== key) {
+      result[camel] = value
+    }
+
     for (const alias of OUTPUT_ALIASES[key] ?? []) {
       result[alias] = value
+    }
+    if (camel) {
+      for (const alias of OUTPUT_ALIASES[camel] ?? []) {
+        result[alias] = value
+      }
     }
   }
 

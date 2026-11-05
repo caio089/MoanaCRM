@@ -38,30 +38,43 @@ export function AdminClient({ initialLeads, onLeadsChange }: AdminClientProps) {
           ? dados.cpf.replace(/\D/g, '')
           : null
 
-      const { data, error } = await supabase
+      const rowPayload: Record<string, unknown> = {
+        id: novoId,
+        nome: dados.nome,
+        cpf,
+        telefone: dados.telefone || null,
+        cidade: dados.cidade || null,
+        zona: dados.zona || null,
+        etapa: dados.etapa || 'lead',
+        corretor: dados.corretor || null,
+        corretor_id: null,
+        coordenador: dados.coordenador || null,
+        coordenador_id: null,
+        construtora: dados.construtora || null,
+        origem: dados.origem || null,
+        data_origem: dados.dataOrigem || dados.data_origem || null,
+        vgv: dados.vgv ? parseFloat(String(dados.vgv)) : null,
+        tipo_operacao: dados.tipoOperacao || 'aluguel',
+        criado_em: agora.toISOString(),
+        atualizado_em: agora.toISOString(),
+      }
+
+      let { data, error } = await supabase
         .from('leads')
-        .insert([
-          {
-            id: novoId,
-            nome: dados.nome,
-            cpf,
-            telefone: dados.telefone || null,
-            cidade: dados.cidade || null,
-            zona: dados.zona || null,
-            etapa: dados.etapa || 'lead',
-            corretor: dados.corretor || null,
-            corretor_id: null,
-            coordenador: dados.coordenador || null,
-            coordenador_id: null,
-            construtora: dados.construtora || null,
-            origem: dados.origem || null,
-            vgv: dados.vgv ? parseFloat(String(dados.vgv)) : null,
-            tipo_operacao: dados.tipoOperacao || 'aluguel',
-            criado_em: agora.toISOString(),
-            atualizado_em: agora.toISOString(),
-          },
-        ])
+        .insert([rowPayload])
         .select()
+
+      const isMissingCol = (err: unknown) => {
+        const e = err as { code?: string; message?: string } | null
+        return e?.code === 'PGRST204' || (typeof e?.message === 'string' && e.message.includes('data_origem'))
+      }
+
+      if (error && isMissingCol(error)) {
+        delete rowPayload.data_origem
+        const retry = await supabase.from('leads').insert([rowPayload]).select()
+        data = retry.data
+        error = retry.error
+      }
 
       if (error) throw error
 
@@ -90,25 +103,40 @@ export function AdminClient({ initialLeads, onLeadsChange }: AdminClientProps) {
     try {
       const agora = new Date()
 
-      const { data, error } = await supabase
+      const updatePayload: Record<string, unknown> = {
+        nome: dados.nome,
+        cpf: dados.cpf || null,
+        telefone: dados.telefone || null,
+        cidade: dados.cidade || null,
+        zona: dados.zona || null,
+        etapa: dados.etapa || 'lead',
+        corretor: dados.corretor || null,
+        coordenador: dados.coordenador || null,
+        construtora: dados.construtora || null,
+        origem: dados.origem || null,
+        data_origem: dados.dataOrigem || dados.data_origem || null,
+        vgv: dados.vgv ? parseFloat(String(dados.vgv)) : null,
+        tipo_operacao: dados.tipoOperacao || 'aluguel',
+        atualizado_em: agora.toISOString(),
+      }
+
+      let { data, error } = await supabase
         .from('leads')
-        .update({
-          nome: dados.nome,
-          cpf: dados.cpf || null,
-          telefone: dados.telefone || null,
-          cidade: dados.cidade || null,
-          zona: dados.zona || null,
-          etapa: dados.etapa || 'lead',
-          corretor: dados.corretor || null,
-          coordenador: dados.coordenador || null,
-          construtora: dados.construtora || null,
-          origem: dados.origem || null,
-          vgv: dados.vgv ? parseFloat(String(dados.vgv)) : null,
-          tipo_operacao: dados.tipoOperacao || 'aluguel',
-          atualizado_em: agora.toISOString(),
-        })
+        .update(updatePayload)
         .eq('id', id)
         .select()
+
+      const isMissingCol = (err: unknown) => {
+        const e = err as { code?: string; message?: string } | null
+        return e?.code === 'PGRST204' || (typeof e?.message === 'string' && e.message.includes('data_origem'))
+      }
+
+      if (error && isMissingCol(error)) {
+        delete updatePayload.data_origem
+        const retry = await supabase.from('leads').update(updatePayload).eq('id', id).select()
+        data = retry.data
+        error = retry.error
+      }
 
       if (error) throw error
 

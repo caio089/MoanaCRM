@@ -23,6 +23,16 @@ export function ModalNovoLead({ lead, onSave, onClose }: ModalNovoLeadProps) {
     coordenador: lead?.coordenador || '',
     construtora: lead?.construtora || '',
     origem: lead?.origem || '',
+    dataOrigem: (() => {
+      const raw = lead?.dataOrigem || lead?.data_origem
+      if (!raw) return ''
+      if (typeof raw === 'string') return raw.slice(0, 10)
+      try {
+        return new Date(raw).toISOString().slice(0, 10)
+      } catch {
+        return ''
+      }
+    })(),
     vgv: lead?.vgv ? Number(lead.vgv) : '',
     tipoOperacao: (lead?.tipoOperacao || '') as TipoOperacao | '',
   })
@@ -109,14 +119,14 @@ export function ModalNovoLead({ lead, onSave, onClose }: ModalNovoLeadProps) {
               {erros.cpf && <p className="text-label-sm text-error mt-1">{erros.cpf}</p>}
             </div>
             <div>
-              <label className="block text-label-sm text-on-surface-variant mb-1">Telefone</label>
+              <label className="block text-label-sm text-on-surface-variant mb-1">Telefone *</label>
               <input
                 type="text"
                 name="telefone"
                 value={formData.telefone}
                 onChange={handleChange}
                 className="w-full px-3 py-2 border border-outline rounded bg-surface-high text-on-surface"
-                placeholder="(11) 98765-4321"
+                placeholder="Ex: +55 (86) 98888-8888 ou +31 6 12345678"
               />
             </div>
           </div>
@@ -235,19 +245,30 @@ export function ModalNovoLead({ lead, onSave, onClose }: ModalNovoLeadProps) {
               </select>
             </div>
             <div>
-              <label className="block text-label-sm text-on-surface-variant mb-1">VGV</label>
+              <label className="block text-label-sm text-on-surface-variant mb-1">Data de origem</label>
               <input
-                type="number"
-                name="vgv"
-                value={formData.vgv}
+                type="date"
+                name="dataOrigem"
+                value={formData.dataOrigem}
                 onChange={handleChange}
-                className={`w-full px-3 py-2 border rounded bg-surface-high text-on-surface ${
-                  erros.vgv ? 'border-error' : 'border-outline'
-                }`}
-                placeholder="450000"
+                className="w-full px-3 py-2 border border-outline rounded bg-surface-high text-on-surface"
               />
-              {erros.vgv && <p className="text-label-sm text-error mt-1">{erros.vgv}</p>}
             </div>
+          </div>
+
+          <div>
+            <label className="block text-label-sm text-on-surface-variant mb-1">VGV</label>
+            <input
+              type="number"
+              name="vgv"
+              value={formData.vgv}
+              onChange={handleChange}
+              className={`w-full px-3 py-2 border rounded bg-surface-high text-on-surface ${
+                erros.vgv ? 'border-error' : 'border-outline'
+              }`}
+              placeholder="450000"
+            />
+            {erros.vgv && <p className="text-label-sm text-error mt-1">{erros.vgv}</p>}
           </div>
 
           <div className="flex gap-2 pt-4">

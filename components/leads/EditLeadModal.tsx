@@ -91,6 +91,7 @@ export function EditLeadModal({
     faturamentoPrevisto: '',
     etapa: 'lead',
     origem: '',
+    dataOrigem: '',
     produto: '',
     bairro: '',
     corretor: '',
@@ -135,6 +136,16 @@ export function EditLeadModal({
       faturamentoPrevisto: lead.faturamentoPrevisto?.toString() || '',
       etapa: lead.etapa || 'lead',
       origem: lead.origem || '',
+      dataOrigem: (() => {
+        const raw = lead.dataOrigem || lead.data_origem
+        if (!raw) return ''
+        if (typeof raw === 'string') return raw.slice(0, 10)
+        try {
+          return new Date(raw).toISOString().slice(0, 10)
+        } catch {
+          return ''
+        }
+      })(),
       produto: lead.produto || '',
       bairro: lead.bairro || '',
       corretor: lead.corretor || '',
@@ -299,9 +310,9 @@ export function EditLeadModal({
                 />
                 <TextInput
                   label="CPF"
-                  required
                   value={formData.cpf}
                   onChange={(e) => setFormData({ ...formData, cpf: e.target.value })}
+                  placeholder="000.000.000-00 (opcional)"
                   error={getError('cpf')}
                 />
                 <TextInput
@@ -309,6 +320,7 @@ export function EditLeadModal({
                   required
                   value={formData.telefone}
                   onChange={(e) => setFormData({ ...formData, telefone: e.target.value })}
+                  placeholder="Ex: +55 (86) 98888-8888 ou +31 6 12345678"
                   error={getError('telefone')}
                 />
               </div>
@@ -497,6 +509,13 @@ export function EditLeadModal({
                     onChange={(e) => setFormData({ ...formData, origem: e.target.value })}
                     options={[...ORIGENS]}
                     error={getError('origem')}
+                  />
+                  <TextInput
+                    label="Data de origem (primeiro contato)"
+                    type="date"
+                    value={formData.dataOrigem}
+                    onChange={(e) => setFormData({ ...formData, dataOrigem: e.target.value })}
+                    error={getError('dataOrigem')}
                   />
                 <Select
                   label="Corretor"
