@@ -3,6 +3,7 @@ export type LeadOption = { value: string; label: string }
 
 export const ETAPAS: LeadOption[] = [
   { value: 'lead', label: 'Lead' },
+  { value: 'em_atendimento', label: 'Em atendimento' },
   { value: 'analise', label: 'Análise' },
   { value: 'aprovado', label: 'Aprovado' },
   { value: 'especulativo', label: 'Especulativo' },

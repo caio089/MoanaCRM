@@ -123,3 +123,6 @@ export const Checkbox = React.forwardRef<HTMLInputElement, CheckboxProps>(
 )
 
 Checkbox.displayName = 'Checkbox'
+
+export { DateInput, isoToBrDate, brDateToIso, formatBrDateInput } from './DateInput'
+export type { DateInputProps } from './DateInput'

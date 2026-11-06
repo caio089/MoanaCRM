@@ -20,6 +20,7 @@ import type { EtapaFunil } from '@/lib/types'
 
 const ETAPAS_FUNIL: EtapaFunil[] = [
   'lead',
+  'em_atendimento',
   'analise',
   'aprovado',
   'especulativo',
@@ -30,6 +31,7 @@ const ETAPAS_FUNIL: EtapaFunil[] = [
 
 const CORES: Record<EtapaFunil, string> = {
   lead: '#B8A6D9',
+  em_atendimento: '#FBBF24',
   analise: '#D9BD84',
   aprovado: '#91C9AA',
   especulativo: '#CDA36D',

@@ -9,6 +9,7 @@ import type { EntidadeMetrics, EtapaFunil } from '@/lib/types'
 
 const ETAPA_LABEL: Record<EtapaFunil, string> = {
   lead: 'Lead',
+  em_atendimento: 'Em atendimento',
   analise: 'Análise',
   aprovado: 'Aprovado',
   especulativo: 'Especulativo',
@@ -19,6 +20,7 @@ const ETAPA_LABEL: Record<EtapaFunil, string> = {
 
 const ETAPA_ORDER: EtapaFunil[] = [
   'lead',
+  'em_atendimento',
   'analise',
   'aprovado',
   'especulativo',

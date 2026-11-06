@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { useEditLead } from '@/lib/hooks/useEditLead'
 import { useToast } from '@/lib/contexts/ToastContext'
 import { getFilterOptions } from '@/lib/services/leads'
-import { TextInput, Select, TextArea, Checkbox } from '@/components/forms/FormField'
+import { TextInput, Select, TextArea, Checkbox, DateInput } from '@/components/forms/FormField'
 import { CorrespondenteSelect } from '@/components/correspondentes/CorrespondenteSelect'
 import { CidadeSelect } from '@/components/cidades/CidadeSelect'
 import { ConstrutoraSelect } from '@/components/construtoras/ConstrutoraSelect'
@@ -510,9 +510,8 @@ export function EditLeadModal({
                     options={[...ORIGENS]}
                     error={getError('origem')}
                   />
-                  <TextInput
+                  <DateInput
                     label="Data de origem (primeiro contato)"
-                    type="date"
                     value={formData.dataOrigem}
                     onChange={(e) => setFormData({ ...formData, dataOrigem: e.target.value })}
                     error={getError('dataOrigem')}

@@ -27,6 +27,7 @@ export const ORIGENS_CATALOGO: LeadOption[] = [
 /** Mesmas etapas do funil; rótulos mudam conforme a operação. */
 const ETAPA_LABEL_ALUGUEL: Record<EtapaFunil, string> = {
   lead: 'Lead',
+  em_atendimento: 'Em atendimento',
   analise: 'Análise de documentos',
   aprovado: 'Aprovado (interno)',
   especulativo: 'Especulativo',
@@ -37,6 +38,7 @@ const ETAPA_LABEL_ALUGUEL: Record<EtapaFunil, string> = {
 
 const ETAPA_DESC_ALUGUEL: Record<EtapaFunil, string> = {
   lead: 'Primeiro contato',
+  em_atendimento: 'Contato em andamento',
   analise: 'Documentos e comprovante de renda',
   aprovado: 'Decisão da diretoria / sócios',
   especulativo: 'Oportunidade futura',
@@ -66,6 +68,8 @@ export function etapaDescricaoKanban(etapa: EtapaFunil, operacao: TipoOperacao):
   switch (etapa) {
     case 'lead':
       return 'Primeiro contato'
+    case 'em_atendimento':
+      return 'Contato em andamento'
     case 'analise':
       return 'Documentação e perfil'
     case 'aprovado':

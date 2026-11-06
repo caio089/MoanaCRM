@@ -21,6 +21,11 @@ const STAGE_STYLE: Record<EtapaFunil, Omit<StageConfig, 'id' | 'label' | 'descri
     accentClass: 'from-secondary/20',
     countClass: 'bg-secondary/15 text-secondary',
   },
+  em_atendimento: {
+    dotClass: 'bg-amber-400',
+    accentClass: 'from-amber-400/20',
+    countClass: 'bg-amber-400/15 text-amber-200',
+  },
   analise: {
     dotClass: 'bg-amber-300',
     accentClass: 'from-amber-300/20',
@@ -55,6 +60,7 @@ const STAGE_STYLE: Record<EtapaFunil, Omit<StageConfig, 'id' | 'label' | 'descri
 
 const STAGE_ORDER: EtapaFunil[] = [
   'lead',
+  'em_atendimento',
   'analise',
   'aprovado',
   'visita',

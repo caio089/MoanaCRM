@@ -21,6 +21,7 @@ DO $$
 BEGIN
   CREATE TYPE public.etapa_funil AS ENUM (
     'lead',
+    'em_atendimento',
     'analise',
     'aprovado',
     'especulativo',
@@ -2091,3 +2092,8 @@ ALTER TABLE public.leads
   ADD COLUMN IF NOT EXISTS data_origem date;
 
 COMMENT ON COLUMN public.leads.data_origem IS 'Data do primeiro contato do lead (Data de origem)';
+
+-- ============================================================
+-- FILE: 20261106120000_add_em_atendimento_to_etapa_funil.sql
+-- ============================================================
+ALTER TYPE public.etapa_funil ADD VALUE IF NOT EXISTS 'em_atendimento' AFTER 'lead';

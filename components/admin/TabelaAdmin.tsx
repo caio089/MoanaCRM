@@ -4,10 +4,11 @@ import { useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import type { Lead } from '@/lib/types'
 
-const ETAPAS = ['lead', 'analise', 'aprovado', 'especulativo', 'realizado', 'reprovado', 'visita']
+const ETAPAS = ['lead', 'em_atendimento', 'analise', 'aprovado', 'especulativo', 'realizado', 'reprovado', 'visita']
 
 const CORES_ETAPA: Record<string, string> = {
   lead: 'bg-secondary/15 text-secondary',
+  em_atendimento: 'bg-amber-400/15 text-amber-200',
   analise: 'bg-amber-400/15 text-amber-200',
   aprovado: 'bg-tertiary/15 text-tertiary',
   especulativo: 'bg-primary/12 text-primary',

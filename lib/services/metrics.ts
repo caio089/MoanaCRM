@@ -5,6 +5,7 @@ import { calcularVga } from '@/lib/utils/vga'
 
 const ETAPAS: EtapaFunil[] = [
   'lead',
+  'em_atendimento',
   'analise',
   'aprovado',
   'especulativo',

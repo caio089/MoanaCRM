@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useId, useMemo, useState } from 'react'
+import { DateInput } from '@/components/forms/FormField'
 
 /** Opção de select: string legada ou valor tipado (ex.: id da equipe). */
 export type FilterOption =
@@ -315,28 +316,20 @@ export function FilterBar({
             {showDatePicker && (
               <div className="absolute left-0 right-0 z-50 mt-2 rounded-2xl border border-white/10 bg-surface-low p-4 shadow-[0_20px_50px_rgba(0,0,0,0.45)] sm:left-auto sm:right-0 sm:w-72">
                 <div className="space-y-3">
-                  <div>
-                    <label className="mb-1.5 block text-label-sm uppercase tracking-[0.14em] text-on-surface-variant">
-                      Data início
-                    </label>
-                    <input
-                      type="date"
-                      value={filters.dataInicio || ''}
-                      onChange={(e) => handleFilterChange('dataInicio', e.target.value)}
-                      className="w-full px-3 py-2"
-                    />
-                  </div>
-                  <div>
-                    <label className="mb-1.5 block text-label-sm uppercase tracking-[0.14em] text-on-surface-variant">
-                      Data fim
-                    </label>
-                    <input
-                      type="date"
-                      value={filters.dataFim || ''}
-                      onChange={(e) => handleFilterChange('dataFim', e.target.value)}
-                      className="w-full px-3 py-2"
-                    />
-                  </div>
+                  <DateInput
+                    label="Data início"
+                    name="dataInicio"
+                    value={filters.dataInicio || ''}
+                    onChange={(e) => handleFilterChange('dataInicio', e.target.value)}
+                    className="!py-2 !px-3"
+                  />
+                  <DateInput
+                    label="Data fim"
+                    name="dataFim"
+                    value={filters.dataFim || ''}
+                    onChange={(e) => handleFilterChange('dataFim', e.target.value)}
+                    className="!py-2 !px-3"
+                  />
                   <button
                     type="button"
                     onClick={() => setShowDatePicker(false)}

@@ -2,7 +2,7 @@
 
 import { supabase } from '@/lib/supabase'
 
-const ETAPAS = ['lead', 'analise', 'aprovado', 'especulativo', 'realizado', 'reprovado', 'visita']
+const ETAPAS = ['lead', 'em_atendimento', 'analise', 'aprovado', 'especulativo', 'realizado', 'reprovado', 'visita']
 
 interface BulkActionsBarProps {
   selectedIds: string[]

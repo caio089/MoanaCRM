@@ -2,6 +2,7 @@
 
 export type EtapaFunil =
   | 'lead'
+  | 'em_atendimento'
   | 'analise'
   | 'aprovado'
   | 'especulativo'

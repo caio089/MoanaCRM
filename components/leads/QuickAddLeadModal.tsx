@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useCreateLead } from '@/lib/hooks/useCreateLead'
 import { useToast } from '@/lib/contexts/ToastContext'
-import { TextInput, Select, TextArea } from '@/components/forms/FormField'
+import { TextInput, Select, TextArea, DateInput } from '@/components/forms/FormField'
 import { CidadeSelect } from '@/components/cidades/CidadeSelect'
 import { ORIGENS } from '@/lib/constants/origens'
 import { useOperacao } from '@/lib/contexts/OperacaoContext'
@@ -212,9 +212,8 @@ export function QuickAddLeadModal({
             error={getError('origem')}
           />
 
-          <TextInput
+          <DateInput
             label="Data de origem (primeiro contato)"
-            type="date"
             value={formData.dataOrigem}
             onChange={(e) => setFormData({ ...formData, dataOrigem: e.target.value })}
             error={getError('dataOrigem')}

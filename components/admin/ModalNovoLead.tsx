@@ -4,6 +4,7 @@ import { useState } from 'react'
 import type { Lead } from '@/lib/types'
 import { ORIGENS } from '@/lib/constants/origens'
 import { TIPOS_OPERACAO, etapasPorOperacao, type TipoOperacao } from '@/lib/constants/operacao'
+import { DateInput } from '@/components/forms/FormField'
 
 interface ModalNovoLeadProps {
   lead?: Lead | null
@@ -245,13 +246,12 @@ export function ModalNovoLead({ lead, onSave, onClose }: ModalNovoLeadProps) {
               </select>
             </div>
             <div>
-              <label className="block text-label-sm text-on-surface-variant mb-1">Data de origem</label>
-              <input
-                type="date"
+              <DateInput
+                label="Data de origem"
                 name="dataOrigem"
                 value={formData.dataOrigem}
-                onChange={handleChange}
-                className="w-full px-3 py-2 border border-outline rounded bg-surface-high text-on-surface"
+                onChange={(e) => handleChange(e as any)}
+                className="!py-2 !px-3 border border-outline rounded bg-surface-high text-on-surface"
               />
             </div>
           </div>

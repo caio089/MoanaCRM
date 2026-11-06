@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useCreateLead } from '@/lib/hooks/useCreateLead'
 import { useToast } from '@/lib/contexts/ToastContext'
 import { getFilterOptions } from '@/lib/services/leads'
-import { TextInput, Select, TextArea, Checkbox } from '@/components/forms/FormField'
+import { TextInput, Select, TextArea, Checkbox, DateInput } from '@/components/forms/FormField'
 import { CorrespondenteSelect } from '@/components/correspondentes/CorrespondenteSelect'
 import { CidadeSelect } from '@/components/cidades/CidadeSelect'
 import { ConstrutoraSelect } from '@/components/construtoras/ConstrutoraSelect'
@@ -398,9 +398,8 @@ export function CreateLeadForm({ onSuccess }: CreateLeadFormProps) {
               options={[...ORIGENS]}
               error={getError('origem')}
             />
-            <TextInput
+            <DateInput
               label="Data de origem (primeiro contato)"
-              type="date"
               value={formData.dataOrigem}
               onChange={(e) => setFormData({ ...formData, dataOrigem: e.target.value })}
               error={getError('dataOrigem')}

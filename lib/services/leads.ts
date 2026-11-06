@@ -450,6 +450,16 @@ function isMissingColumnError(err: unknown): boolean {
   return e.code === 'PGRST204' || (typeof e.message === 'string' && e.message.includes('data_origem'))
 }
 
+function isEtapaEnumError(err: unknown): boolean {
+  if (!err || typeof err !== 'object') return false
+  const e = err as { code?: string; message?: string }
+  return (
+    e.code === '22P02' &&
+    typeof e.message === 'string' &&
+    (e.message.includes('etapa_funil') || e.message.includes('em_atendimento'))
+  )
+}
+
 // Criar novo lead
 export async function createLead(leadData: Partial<Lead>): Promise<Lead> {
   try {
@@ -476,6 +486,17 @@ export async function createLead(leadData: Partial<Lead>): Promise<Lead> {
       console.warn('Coluna data_origem ainda não aplicada no Supabase. Inserindo sem ela...')
       const fallbackPayload = { ...dbPayload }
       delete fallbackPayload.data_origem
+      const retry = await supabase.from('leads').insert([fallbackPayload])
+      error = retry.error
+    }
+
+    // Se o enum etapa_funil no Supabase ainda não tiver 'em_atendimento', faz fallback para 'lead'
+    if (error && isEtapaEnumError(error) && dbPayload.etapa === 'em_atendimento') {
+      console.warn('Enum etapa_funil ainda sem em_atendimento no Supabase. Inserindo como lead...')
+      const fallbackPayload: Record<string, unknown> = { ...dbPayload, etapa: 'lead' }
+      fallbackPayload.observacao = fallbackPayload.observacao
+        ? `[Em atendimento] ${String(fallbackPayload.observacao)}`
+        : '[Em atendimento]'
       const retry = await supabase.from('leads').insert([fallbackPayload])
       error = retry.error
     }
@@ -511,6 +532,17 @@ export async function updateLead(id: string, leadData: Partial<Lead>): Promise<L
       console.warn('Coluna data_origem ainda não aplicada no Supabase. Atualizando sem ela...')
       const fallbackPayload = { ...dbPayload }
       delete fallbackPayload.data_origem
+      const retry = await supabase.from('leads').update(fallbackPayload).eq('id', id)
+      error = retry.error
+    }
+
+    // Se o enum etapa_funil no Supabase ainda não tiver 'em_atendimento', faz fallback para 'lead'
+    if (error && isEtapaEnumError(error) && dbPayload.etapa === 'em_atendimento') {
+      console.warn('Enum etapa_funil ainda sem em_atendimento no Supabase. Atualizando como lead...')
+      const fallbackPayload: Record<string, unknown> = { ...dbPayload, etapa: 'lead' }
+      fallbackPayload.observacao = fallbackPayload.observacao
+        ? `[Em atendimento] ${String(fallbackPayload.observacao)}`
+        : '[Em atendimento]'
       const retry = await supabase.from('leads').update(fallbackPayload).eq('id', id)
       error = retry.error
     }
