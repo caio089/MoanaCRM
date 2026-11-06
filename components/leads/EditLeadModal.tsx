@@ -163,7 +163,9 @@ export function EditLeadModal({
       construtora: lead.construtora || '',
       correspondente: lead.correspondente || '',
       correspondenteId: lead.correspondenteId || '',
-      observacao: lead.observacao || '',
+      observacao: lead.observacao
+        ? String(lead.observacao).replace(/^\[Em atendimento\]\s*/i, '')
+        : '',
       situacaoReprovado: lead.situacaoReprovado || '',
       ccv: lead.ccv || false,
       tipoOperacao: (lead.tipoOperacao === 'aluguel' ? 'aluguel' : 'venda') as TipoOperacao,

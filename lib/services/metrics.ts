@@ -170,28 +170,34 @@ async function fetchLeadMetricRows(): Promise<LeadMetricRow[]> {
   const { data, error } = await supabase
     .from('leads')
     .select(
-      'id, nome, etapa, vgv, construtora, criado_em, atualizado_em, coordenador_id, corretor_id, coordenador, corretor, tipo_operacao, valor_locacao_mensal, prazo_contrato_meses, valor_avaliacao',
+      'id, nome, etapa, vgv, construtora, criado_em, atualizado_em, coordenador_id, corretor_id, coordenador, corretor, tipo_operacao, valor_locacao_mensal, prazo_contrato_meses, valor_avaliacao, observacao',
     )
 
   if (error) throw new Error(error.message)
 
-  return ((data as Record<string, unknown>[]) || []).map((row) => ({
-    id: String(row.id),
-    nome: (row.nome as string | null) ?? null,
-    etapa: row.etapa as EtapaFunil,
-    vgv: row.vgv === null || row.vgv === undefined ? null : toNumber(row.vgv),
-    construtora: (row.construtora as string | null) ?? null,
-    criadoEm: (row.criadoEm ?? row.criado_em ?? null) as string | Date | null,
-    atualizadoEm: (row.atualizadoEm ?? row.atualizado_em ?? null) as string | Date | null,
-    coordenadorId: (row.coordenadorId ?? row.coordenador_id ?? null) as string | null,
-    corretorId: (row.corretorId ?? row.corretor_id ?? null) as string | null,
-    coordenador: (row.coordenador as string | null) ?? null,
-    corretor: (row.corretor as string | null) ?? null,
-    tipoOperacao: row.tipoOperacao === 'aluguel' || row.tipo_operacao === 'aluguel' ? 'aluguel' : 'venda',
-    valorLocacaoMensal: toNumber(row.valorLocacaoMensal ?? row.valor_locacao_mensal),
-    prazoContratoMeses: toNumber(row.prazoContratoMeses ?? row.prazo_contrato_meses),
-    valorAvaliacao: toNumber(row.valorAvaliacao ?? row.valor_avaliacao),
-  }))
+  return ((data as Record<string, unknown>[]) || []).map((row) => {
+    let etapa = (row.etapa as EtapaFunil) || 'lead'
+    if (etapa === 'lead' && String(row.observacao || '').includes('[Em atendimento]')) {
+      etapa = 'em_atendimento'
+    }
+    return {
+      id: String(row.id),
+      nome: (row.nome as string | null) ?? null,
+      etapa,
+      vgv: row.vgv === null || row.vgv === undefined ? null : toNumber(row.vgv),
+      construtora: (row.construtora as string | null) ?? null,
+      criadoEm: (row.criadoEm ?? row.criado_em ?? null) as string | Date | null,
+      atualizadoEm: (row.atualizadoEm ?? row.atualizado_em ?? null) as string | Date | null,
+      coordenadorId: (row.coordenadorId ?? row.coordenador_id ?? null) as string | null,
+      corretorId: (row.corretorId ?? row.corretor_id ?? null) as string | null,
+      coordenador: (row.coordenador as string | null) ?? null,
+      corretor: (row.corretor as string | null) ?? null,
+      tipoOperacao: row.tipoOperacao === 'aluguel' || row.tipo_operacao === 'aluguel' ? 'aluguel' : 'venda',
+      valorLocacaoMensal: toNumber(row.valorLocacaoMensal ?? row.valor_locacao_mensal),
+      prazoContratoMeses: toNumber(row.prazoContratoMeses ?? row.prazo_contrato_meses),
+      valorAvaliacao: toNumber(row.valorAvaliacao ?? row.valor_avaliacao),
+    }
+  })
 }
 
 function filterPreviousPeriod(

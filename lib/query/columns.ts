@@ -266,5 +266,14 @@ export function dualCaseRow(row: Record<string, unknown>): Record<string, unknow
     }
   }
 
+  // Compatibilidade com fallback 'em_atendimento': se o enum do banco ainda estiver como 'lead' mas marcado como em atendimento
+  if (
+    (result.etapa === 'lead' || result.etapa_funil === 'lead') &&
+    String(result.observacao || '').includes('[Em atendimento]')
+  ) {
+    result.etapa = 'em_atendimento'
+    result.etapa_funil = 'em_atendimento'
+  }
+
   return result
 }
