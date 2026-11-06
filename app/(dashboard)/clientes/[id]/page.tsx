@@ -76,6 +76,7 @@ export default function ClientePage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [editing, setEditing] = useState(false)
+  const [editTab, setEditTab] = useState('personal')
 
   const loadLead = useCallback(async () => {
     try {
@@ -119,7 +120,16 @@ export default function ClientePage() {
           <>
             <button type="button" onClick={() => router.back()} className="chip">← Voltar</button>
             <WhatsAppButton telefone={lead.telefone} nome={lead.nome} label="Mandar mensagem" />
-            <button type="button" onClick={() => setEditing(true)} className="btn-primary">Editar cliente</button>
+            <button
+              type="button"
+              onClick={() => {
+                setEditTab('personal')
+                setEditing(true)
+              }}
+              className="btn-primary"
+            >
+              Editar cliente
+            </button>
           </>
         )}
       />
@@ -242,7 +252,19 @@ export default function ClientePage() {
       </Section>
 
       <section className="card">
-        <h2 className="text-headline-sm text-on-surface">Observações</h2>
+        <div className="flex items-center justify-between">
+          <h2 className="text-headline-sm text-on-surface">Observações</h2>
+          <button
+            type="button"
+            onClick={() => {
+              setEditTab('observations')
+              setEditing(true)
+            }}
+            className="chip text-label-sm"
+          >
+            Editar observações
+          </button>
+        </div>
         <p className="mt-3 whitespace-pre-wrap text-body-md leading-relaxed text-on-surface-variant">{lead.observacao || 'Nenhuma observação registrada.'}</p>
       </section>
 
@@ -251,6 +273,7 @@ export default function ClientePage() {
           isOpen
           leadId={lead.id}
           initialLead={lead}
+          initialTab={editTab}
           onClose={() => setEditing(false)}
           onSuccess={() => {
             setEditing(false)

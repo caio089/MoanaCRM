@@ -149,20 +149,32 @@ export function CreateLeadForm({ onSuccess }: CreateLeadFormProps) {
   return (
     <div className="max-w-4xl mx-auto">
       {/* Tabs */}
-      <div className="mb-6 flex gap-1 overflow-x-auto border-b border-white/8">
-        {TABS.map((tab) => (
-          <button
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
-            className={`whitespace-nowrap px-4 py-3 text-label-md transition-colors ${
-              activeTab === tab.id
-                ? 'border-b-2 border-primary text-primary'
-                : 'border-b-2 border-transparent text-on-surface-variant hover:text-on-surface'
-            }`}
-          >
-            {tab.label}
-          </button>
-        ))}
+      <div className="mb-6 flex flex-wrap gap-1.5 sm:gap-2 border-b border-white/8 pb-3">
+        {TABS.map((tab) => {
+          const isActive = activeTab === tab.id
+          return (
+            <button
+              key={tab.id}
+              type="button"
+              onClick={() => setActiveTab(tab.id)}
+              className={`inline-flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-label-md font-medium transition-all ${
+                isActive
+                  ? 'bg-primary text-white shadow-[0_2px_10px_rgba(227,6,19,0.35)]'
+                  : 'border border-white/[0.06] bg-white/[0.035] text-on-surface-variant hover:border-white/10 hover:bg-white/[0.08] hover:text-on-surface'
+              }`}
+            >
+              <span>{tab.label}</span>
+              {tab.id === 'observations' && formData.observacao?.trim() && (
+                <span
+                  className={`h-1.5 w-1.5 rounded-full ${
+                    isActive ? 'bg-white' : 'bg-primary'
+                  }`}
+                  title="Possui observações"
+                />
+              )}
+            </button>
+          )
+        })}
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">

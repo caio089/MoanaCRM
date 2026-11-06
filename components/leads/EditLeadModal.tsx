@@ -48,6 +48,7 @@ interface EditLeadModalProps {
   leadId: string
   /** Lead já disponível na tela que abriu o modal, para abrir sem nova leitura. */
   initialLead?: Lead | null
+  initialTab?: string
   onClose: () => void
   onSuccess?: (lead: Lead) => void
 }
@@ -56,11 +57,18 @@ export function EditLeadModal({
   isOpen,
   leadId,
   initialLead,
+  initialTab,
   onClose,
   onSuccess,
 }: EditLeadModalProps) {
-  const [activeTab, setActiveTab] = useState('personal')
+  const [activeTab, setActiveTab] = useState(initialTab || 'personal')
   const [showPreview, setShowPreview] = useState(false)
+
+  useEffect(() => {
+    if (initialTab) {
+      setActiveTab(initialTab)
+    }
+  }, [initialTab])
 
   const [filterOptions, setFilterOptions] = useState({
     corretores: [] as Array<string | { value: string; label: string; coordenadorId?: string | null }>,
@@ -262,35 +270,58 @@ export function EditLeadModal({
     <div className="fixed inset-0 z-50 flex items-end bg-black/50 p-0 sm:items-center sm:justify-center sm:p-4">
       <div className="flex max-h-[92dvh] w-full max-w-2xl flex-col overflow-hidden rounded-t-3xl border border-white/10 bg-surface-low sm:rounded-2xl">
         {/* Header */}
-        <div className="sticky top-0 flex items-center justify-between border-b border-white/8 bg-surface-low/90 p-4 backdrop-blur-xl sm:p-6">
-          <h2 className="text-headline-sm sm:text-headline-md text-on-surface">Editar Lead</h2>
+        <div className="flex flex-shrink-0 items-center justify-between border-b border-white/8 bg-surface-low px-5 py-4 sm:px-6 sm:py-5">
+          <div>
+            <h2 className="text-headline-sm text-on-surface font-semibold">Editar Cliente</h2>
+            {formData.nome && (
+              <p className="mt-0.5 text-label-sm text-on-surface-variant truncate max-w-sm sm:max-w-md">
+                {formData.nome}
+              </p>
+            )}
+          </div>
           <button
+            type="button"
             onClick={onClose}
-            className="text-on-surface-variant hover:text-on-surface text-2xl"
+            className="flex h-9 w-9 items-center justify-center rounded-full text-on-surface-variant hover:bg-white/[0.08] hover:text-on-surface text-2xl transition-colors leading-none"
+            aria-label="Fechar"
           >
             ×
           </button>
         </div>
 
-        {/* Content */}
-        <div className="min-w-0 overflow-y-auto page-section">
-          {/* Tabs */}
-          <div className="flex gap-2 mb-6 border-b border-outline-variant overflow-x-auto">
-            {TABS.map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`px-4 py-3 text-label-md border-b-2 transition-colors whitespace-nowrap ${
-                  activeTab === tab.id
-                    ? 'border-primary text-primary'
-                    : 'border-transparent text-on-surface-variant hover:text-on-surface'
-                }`}
-              >
-                {tab.label}
-              </button>
-            ))}
+        {/* Tabs - Sempre visíveis em linha ou quebra elegante, impossível achatar */}
+        <div className="flex-shrink-0 border-b border-white/8 bg-surface-low/60 px-4 py-2.5 sm:px-6">
+          <div className="flex flex-wrap gap-1.5 sm:gap-2">
+            {TABS.map((tab) => {
+              const isActive = activeTab === tab.id
+              return (
+                <button
+                  key={tab.id}
+                  type="button"
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`inline-flex items-center gap-1.5 rounded-xl px-3 py-1.5 sm:px-3.5 sm:py-2 text-label-md font-medium transition-all ${
+                    isActive
+                      ? 'bg-primary text-white shadow-[0_2px_10px_rgba(227,6,19,0.35)]'
+                      : 'border border-white/[0.06] bg-white/[0.035] text-on-surface-variant hover:border-white/10 hover:bg-white/[0.08] hover:text-on-surface'
+                  }`}
+                >
+                  <span>{tab.label}</span>
+                  {tab.id === 'observations' && formData.observacao?.trim() && (
+                    <span
+                      className={`h-1.5 w-1.5 rounded-full ${
+                        isActive ? 'bg-white' : 'bg-primary'
+                      }`}
+                      title="Possui observações"
+                    />
+                  )}
+                </button>
+              )
+            })}
           </div>
+        </div>
 
+        {/* Content */}
+        <div className="flex-1 min-h-0 overflow-y-auto p-4 sm:p-6">
           <form onSubmit={handleSubmit} className="space-y-6">
             <OperacaoToggle
               required
@@ -566,10 +597,11 @@ export function EditLeadModal({
             {activeTab === 'observations' && (
               <div className="space-y-4">
                 <TextArea
-                  label="Observações"
+                  label="Observações do Lead"
                   value={formData.observacao}
                   onChange={(e) => setFormData({ ...formData, observacao: e.target.value })}
-                  placeholder="Adicione observações sobre o lead..."
+                  placeholder="Adicione observações, histórico de conversas, anotações de contato ou preferências..."
+                  rows={6}
                 />
                 {formData.etapa === 'reprovado' && (
                   <TextInput
@@ -594,7 +626,7 @@ export function EditLeadModal({
             )}
 
             {/* Botões */}
-            <div className="flex gap-3 pt-4 border-t border-outline-variant">
+            <div className="sticky bottom-0 -mx-4 -mb-4 sm:-mx-6 sm:-mb-6 mt-8 flex gap-3 border-t border-white/10 bg-surface-low/95 p-4 backdrop-blur-xl sm:px-6">
               <button
                 type="button"
                 onClick={onClose}
@@ -608,7 +640,7 @@ export function EditLeadModal({
                 className="btn-primary flex-1 disabled:opacity-40"
                 disabled={updating}
               >
-                {showPreview ? (updating ? 'Salvando…' : 'Atualizar') : 'Visualizar'}
+                {showPreview ? (updating ? 'Salvando…' : 'Salvar Alterações') : 'Visualizar alterações'}
               </button>
             </div>
           </form>
