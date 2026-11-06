@@ -15,7 +15,7 @@ import {
   getDashboardSummary,
   type DashboardSummary,
 } from '@/lib/services/metrics'
-import { getTeamHierarchy } from '@/lib/services/team'
+import { getFilterOptions } from '@/lib/services/leads'
 import type { EtapaFunil } from '@/lib/types'
 
 const ETAPAS_FUNIL: EtapaFunil[] = [
@@ -142,27 +142,19 @@ export default function VisaoPage() {
 
     async function loadOptions() {
       try {
-        const hierarchy = await getTeamHierarchy(true)
+        const options = await getFilterOptions()
         if (cancelled) return
 
-        setCoordOptions(
-          hierarchy.map((c) => ({ value: c.id, label: c.nome })),
-        )
-        setCorrOptions(
-          hierarchy.flatMap((c) =>
-            c.corretores.map((corr) => ({
-              value: corr.id,
-              label: corr.nome,
-              coordenadorId: c.id,
-            })),
-          ),
-        )
+        setCoordOptions(options.coordenadores || [])
+        setCorrOptions(options.corretores || [])
 
         // Deep link: coordenador + corretor incompatíveis → remove corretor da URL
         if (coordenadorId && corretorId) {
-          const coord = hierarchy.find((c) => c.id === coordenadorId)
-          const pertencente = coord?.corretores.some((c) => c.id === corretorId)
-          if (!pertencente) {
+          const corr = (options.corretores || []).find(
+            (c) => (typeof c === 'string' ? c : c.value) === corretorId,
+          )
+          const coordId = typeof corr === 'object' && corr ? corr.coordenadorId : undefined
+          if (coordId && coordId !== coordenadorId) {
             syncUrl({
               periodo,
               coordenador: coordenadorId,
@@ -171,7 +163,7 @@ export default function VisaoPage() {
           }
         }
       } catch (err) {
-        console.error('Erro ao carregar opções de equipe:', err)
+        console.error('Erro ao carregar opções de filtros:', err)
       }
     }
 
@@ -185,20 +177,12 @@ export default function VisaoPage() {
 
   useEffect(() => {
     function reloadTeam() {
-      void getTeamHierarchy(true)
-        .then((hierarchy) => {
-          setCoordOptions(hierarchy.map((c) => ({ value: c.id, label: c.nome })))
-          setCorrOptions(
-            hierarchy.flatMap((c) =>
-              c.corretores.map((corr) => ({
-                value: corr.id,
-                label: corr.nome,
-                coordenadorId: c.id,
-              })),
-            ),
-          )
+      void getFilterOptions()
+        .then((options) => {
+          setCoordOptions(options.coordenadores || [])
+          setCorrOptions(options.corretores || [])
         })
-        .catch((err) => console.error('Erro ao recarregar equipe:', err))
+        .catch((err) => console.error('Erro ao recarregar filtros:', err))
     }
 
     const onFocus = () => reloadTeam()

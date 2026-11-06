@@ -473,14 +473,21 @@ function matchesCoordenador(
   coordenadorId: string,
   nome: string,
 ): boolean {
-  return (
-    lead.coordenadorId === coordenadorId ||
-    (!lead.coordenadorId && lead.coordenador === nome)
-  )
+  if (lead.coordenadorId && lead.coordenadorId === coordenadorId) return true
+  const target = (nome || coordenadorId).trim().toLowerCase()
+  if (target && lead.coordenador) {
+    if (lead.coordenador.trim().toLowerCase() === target) return true
+  }
+  return false
 }
 
 function matchesCorretor(lead: LeadMetricRow, corretorId: string, nome: string): boolean {
-  return lead.corretorId === corretorId || (!lead.corretorId && lead.corretor === nome)
+  if (lead.corretorId && lead.corretorId === corretorId) return true
+  const target = (nome || corretorId).trim().toLowerCase()
+  if (target && lead.corretor) {
+    if (lead.corretor.trim().toLowerCase() === target) return true
+  }
+  return false
 }
 
 /**
@@ -500,10 +507,10 @@ function matchesCoordenadorEquipe(
   if (team.length === 0) return false
 
   const teamIds = new Set(team.map((m) => m.id))
-  const teamNames = new Set(team.map((m) => m.nome))
+  const teamNames = new Set(team.map((m) => m.nome.trim().toLowerCase()))
 
   if (lead.corretorId && teamIds.has(lead.corretorId)) return true
-  if (!lead.corretorId && lead.corretor && teamNames.has(lead.corretor)) return true
+  if (lead.corretor && teamNames.has(lead.corretor.trim().toLowerCase())) return true
 
   return false
 }
