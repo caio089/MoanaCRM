@@ -55,9 +55,8 @@ export default function KanbanPage() {
     loadLeads()
   }, [loadLeads])
 
-  const { filteredLeads, activeLeads } = useMemo(() => {
+  const { filteredLeads, emAtendimentoLeads } = useMemo(() => {
     const query = (filters.search || '').trim().toLocaleLowerCase('pt-BR')
-    let active = 0
 
     const corretorLabel = (() => {
       if (!filters.corretor) return null
@@ -81,11 +80,13 @@ export default function KanbanPage() {
           .filter(Boolean)
           .some((value) => String(value).toLocaleLowerCase('pt-BR').includes(query))
 
-      if (matches && lead.etapa !== 'realizado' && lead.etapa !== 'reprovado') active += 1
       return matches
     })
 
-    return { filteredLeads: filtered, activeLeads: active }
+    return {
+      filteredLeads: filtered,
+      emAtendimentoLeads: filtered.filter((lead) => lead.etapa === 'em_atendimento').length,
+    }
   }, [filterOptions.corretores, filters, leads, tipoOperacao])
 
   return (
@@ -122,8 +123,8 @@ export default function KanbanPage() {
             <p data-numeric className="mt-1 font-display text-2xl text-on-surface">{filteredLeads.length}</p>
           </div>
           <div>
-            <p className="text-[9px] font-bold uppercase tracking-[0.16em] text-on-surface-variant/50">Em andamento</p>
-            <p data-numeric className="mt-1 font-display text-2xl text-primary">{activeLeads}</p>
+            <p className="text-[9px] font-bold uppercase tracking-[0.16em] text-on-surface-variant/50">Em atendimento</p>
+            <p data-numeric className="mt-1 font-display text-2xl text-primary">{emAtendimentoLeads}</p>
           </div>
         </div>
       </div>
