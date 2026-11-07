@@ -48,6 +48,7 @@ const TEAM: TeamMember[] = [
   { email: 'rodrigocostathe@gmail.com', name: 'Rodrigo Sampaio', role: 'admin' },
   { email: 'daniellymendes166@gmail.com', name: 'Danielly Mendes', role: 'corretor' },
   { email: 'vincistrategy@gmail.com', name: 'Vinci', role: 'corretor' },
+  { email: 'mariojunior2806@gmail.com', name: 'Mário Júnior', role: 'corretor' },
 ]
 
 async function listAllUsers(
@@ -111,6 +112,7 @@ async function main() {
       if (existing) {
         const { error } = await admin.auth.admin.updateUserById(existing.id, {
           password: defaultPassword,
+          email_confirm: true,
           app_metadata: { ...existing.app_metadata, role: member.role },
           user_metadata: {
             ...existing.user_metadata,

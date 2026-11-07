@@ -120,6 +120,8 @@ export default function LoginPage() {
           setError('E-mail ou senha incorretos. Verifique as credenciais e tente novamente.')
         } else if (msg.includes('rate') || msg.includes('too many')) {
           setError('Muitas tentativas. Aguarde 1 minuto e tente de novo.')
+        } else if (msg.includes('email not confirmed')) {
+          setError('E-mail ainda não confirmado. Verifique sua caixa de entrada/spam ou contate o administrador.')
         } else {
           setError(authError.message)
         }
