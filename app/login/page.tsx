@@ -90,6 +90,27 @@ export default function LoginPage() {
 
         // Sem sessão = confirmação de e-mail ativada no projeto
         if (!data.session) {
+          try {
+            await fetch('/api/auth/confirm', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ email: email.trim().toLowerCase() }),
+            })
+
+            const loginRes = await supabase.auth.signInWithPassword({
+              email: email.trim().toLowerCase(),
+              password: password.trim(),
+            })
+
+            if (loginRes.data?.session || loginRes.data?.user) {
+              await ensureCorretorProfile(createdUser.id, nomeTrim, email.trim().toLowerCase())
+              window.location.assign('/visao')
+              return
+            }
+          } catch {
+            // Segue fallback abaixo se auto-confirmação não estiver disponível
+          }
+
           setInfo('Conta criada. Confirme o e-mail (se solicitado) e faça login. Você já aparece em Corretores.')
           setMode('login')
           setPassword('')
@@ -109,10 +130,34 @@ export default function LoginPage() {
         return
       }
 
-      const { data, error: authError } = await supabase.auth.signInWithPassword({
+      let { data, error: authError } = await supabase.auth.signInWithPassword({
         email: emailNorm,
         password: passwordNorm,
       })
+
+      if (authError) {
+        const msg = authError.message.toLowerCase()
+        if (msg.includes('email not confirmed')) {
+          try {
+            const confirmRes = await fetch('/api/auth/confirm', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ email: emailNorm }),
+            })
+
+            if (confirmRes.ok) {
+              const retry = await supabase.auth.signInWithPassword({
+                email: emailNorm,
+                password: passwordNorm,
+              })
+              data = retry.data
+              authError = retry.error
+            }
+          } catch {
+            // Continua com o tratamento normal de erro
+          }
+        }
+      }
 
       if (authError) {
         const msg = authError.message.toLowerCase()

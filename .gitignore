@@ -48,6 +48,8 @@ next-env.d.ts
 .env*.local
 /app/generated/prisma
 supabase/.temp/
+.kpaflow/
+
 .env
 !.env.example
 
