@@ -69,34 +69,86 @@ export default function LoginPage() {
           return
         }
 
-        const { data, error: authError } = await supabase.auth.signUp({
-          email: email.trim().toLowerCase(),
-          password: password.trim(),
-          options: {
-            data: { name: nomeTrim, nome: nomeTrim, role: 'corretor' },
-          },
+        const emailTrim = email.trim().toLowerCase()
+        const passwordTrim = password.trim()
+
+        // Registra diretamente com e-mail já confirmado (sistema interno)
+        try {
+          const regRes = await fetch('/api/auth/register', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              nome: nomeTrim,
+              email: emailTrim,
+              password: passwordTrim,
+              role: 'corretor',
+            }),
+          })
+
+          if (!regRes.ok) {
+            const errData = await regRes.json().catch(() => ({}))
+            const { error: authError } = await supabase.auth.signUp({
+              email: emailTrim,
+              password: passwordTrim,
+              options: {
+                data: { name: nomeTrim, nome: nomeTrim, role: 'corretor' },
+              },
+            })
+            if (authError) {
+              setError(errData.error || authError.message)
+              return
+            }
+          }
+        } catch {
+          const { error: authError } = await supabase.auth.signUp({
+            email: emailTrim,
+            password: passwordTrim,
+            options: {
+              data: { name: nomeTrim, nome: nomeTrim, role: 'corretor' },
+            },
+          })
+          if (authError) {
+            setError(authError.message)
+            return
+          }
+        }
+
+        // Realiza login imediato — sem necessidade de confirmação de e-mail
+        const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+          email: emailTrim,
+          password: passwordTrim,
         })
 
-        if (authError) {
-          setError(authError.message)
+        if (signInError) {
+          if (signInError.message.toLowerCase().includes('email not confirmed')) {
+            await fetch('/api/auth/confirm', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ email: emailTrim }),
+            }).catch(() => {})
+
+            const retry = await supabase.auth.signInWithPassword({
+              email: emailTrim,
+              password: passwordTrim,
+            })
+
+            if (!retry.error) {
+              if (retry.data?.user?.id) {
+                await ensureCorretorProfile(retry.data.user.id, nomeTrim, emailTrim)
+              }
+              window.location.assign('/visao')
+              return
+            }
+          }
+
+          setError(signInError.message)
           return
         }
 
-        const createdUser = data.user
-        if (!createdUser) {
-          setError('Não foi possível criar a conta. Tente novamente.')
-          return
+        if (signInData?.user?.id) {
+          await ensureCorretorProfile(signInData.user.id, nomeTrim, emailTrim)
         }
 
-        // Sem sessão = confirmação de e-mail ativada no projeto
-        if (!data.session) {
-          setInfo('Conta criada. Confirme o e-mail (se solicitado) e faça login. Você já aparece em Corretores.')
-          setMode('login')
-          setPassword('')
-          return
-        }
-
-        await ensureCorretorProfile(createdUser.id, nomeTrim, email.trim().toLowerCase())
         window.location.assign('/visao')
         return
       }
@@ -109,10 +161,32 @@ export default function LoginPage() {
         return
       }
 
-      const { data, error: authError } = await supabase.auth.signInWithPassword({
+      let { data, error: authError } = await supabase.auth.signInWithPassword({
         email: emailNorm,
         password: passwordNorm,
       })
+
+      // Se porventura o usuário estiver com email não confirmado, auto-confirma e retenta
+      if (authError && authError.message.toLowerCase().includes('email not confirmed')) {
+        try {
+          const confirmRes = await fetch('/api/auth/confirm', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: emailNorm }),
+          })
+
+          if (confirmRes.ok) {
+            const retry = await supabase.auth.signInWithPassword({
+              email: emailNorm,
+              password: passwordNorm,
+            })
+            data = retry.data
+            authError = retry.error
+          }
+        } catch {
+          // segue para tratamento normal
+        }
+      }
 
       if (authError) {
         const msg = authError.message.toLowerCase()
@@ -120,8 +194,6 @@ export default function LoginPage() {
           setError('E-mail ou senha incorretos. Verifique as credenciais e tente novamente.')
         } else if (msg.includes('rate') || msg.includes('too many')) {
           setError('Muitas tentativas. Aguarde 1 minuto e tente de novo.')
-        } else if (msg.includes('email not confirmed')) {
-          setError('E-mail ainda não confirmado. Verifique sua caixa de entrada/spam ou contate o administrador.')
         } else {
           setError(authError.message)
         }

@@ -176,6 +176,22 @@ export async function createCoordenador(input: CoordenadorInput): Promise<Coorde
       .single()
 
     if (error || !data) throw new Error(error?.message || 'Falha ao criar coordenador')
+
+    // Provisiona acesso imediato no Auth caso tenha informado e-mail
+    if (input.email?.trim()) {
+      fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          nome,
+          email: input.email.trim(),
+          role: 'coordenador',
+        }),
+      }).catch((err) => {
+        console.warn('Auto-criação de login para coordenador falhou:', err)
+      })
+    }
+
     return asCoordenador(data as Record<string, unknown>)
   } catch (error) {
     console.error('Erro ao criar coordenador:', error)
@@ -261,6 +277,22 @@ export async function createCorretor(input: CorretorInput): Promise<Corretor> {
       .single()
 
     if (error || !data) throw new Error(error?.message || 'Falha ao criar corretor')
+
+    // Provisiona acesso imediato no Auth caso tenha informado e-mail
+    if (input.email?.trim()) {
+      fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          nome,
+          email: input.email.trim(),
+          role: 'corretor',
+        }),
+      }).catch((err) => {
+        console.warn('Auto-criação de login para corretor falhou:', err)
+      })
+    }
+
     return asCorretor(data as Record<string, unknown>)
   } catch (error) {
     console.error('Erro ao criar corretor:', error)
