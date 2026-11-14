@@ -74,7 +74,6 @@ export default function LoginPage() {
 
         // Registra diretamente com e-mail já confirmado via API do servidor (service role)
         // Se não disponível, cai no signUp padrão do Supabase Auth como fallback
-        let registeredViaApi = false
         try {
           const regRes = await fetch('/api/auth/register', {
             method: 'POST',
@@ -87,9 +86,7 @@ export default function LoginPage() {
             }),
           })
 
-          if (regRes.ok) {
-            registeredViaApi = true
-          } else {
+          if (!regRes.ok) {
             // Se service role não estiver configurada (503) ou outro erro de servidor,
             // usa signUp padrão sem mostrar o erro técnico ao usuário
             const errData = await regRes.json().catch(() => ({}))
