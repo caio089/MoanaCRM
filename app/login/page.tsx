@@ -72,7 +72,9 @@ export default function LoginPage() {
         const emailTrim = email.trim().toLowerCase()
         const passwordTrim = password.trim()
 
-        // Registra diretamente com e-mail já confirmado (sistema interno)
+        // Registra diretamente com e-mail já confirmado via API do servidor (service role)
+        // Se não disponível, cai no signUp padrão do Supabase Auth como fallback
+        let registeredViaApi = false
         try {
           const regRes = await fetch('/api/auth/register', {
             method: 'POST',
@@ -85,8 +87,16 @@ export default function LoginPage() {
             }),
           })
 
-          if (!regRes.ok) {
+          if (regRes.ok) {
+            registeredViaApi = true
+          } else {
+            // Se service role não estiver configurada (503) ou outro erro de servidor,
+            // usa signUp padrão sem mostrar o erro técnico ao usuário
             const errData = await regRes.json().catch(() => ({}))
+            const isServerConfigError = regRes.status === 503 ||
+              (errData.error || '').toLowerCase().includes('service role') ||
+              (errData.error || '').toLowerCase().includes('não configurad')
+
             const { error: authError } = await supabase.auth.signUp({
               email: emailTrim,
               password: passwordTrim,
@@ -95,11 +105,13 @@ export default function LoginPage() {
               },
             })
             if (authError) {
-              setError(errData.error || authError.message)
+              // Só mostra erro técnico se não for problema de config do servidor
+              setError(isServerConfigError ? authError.message : (errData.error || authError.message))
               return
             }
           }
         } catch {
+          // Rede offline ou outro erro de fetch — tenta signUp padrão
           const { error: authError } = await supabase.auth.signUp({
             email: emailTrim,
             password: passwordTrim,
@@ -112,7 +124,6 @@ export default function LoginPage() {
             return
           }
         }
-
         // Realiza login imediato — sem necessidade de confirmação de e-mail
         const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
           email: emailTrim,
