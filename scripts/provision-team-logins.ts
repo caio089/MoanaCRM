@@ -48,7 +48,7 @@ const TEAM: TeamMember[] = [
   { email: 'rodrigocostathe@gmail.com', name: 'Rodrigo Sampaio', role: 'admin' },
   { email: 'daniellymendes166@gmail.com', name: 'Danielly Mendes', role: 'corretor' },
   { email: 'vincistrategy@gmail.com', name: 'Vinci', role: 'corretor' },
-  { email: 'smachadoneto@gmail.com', name: 'Sebastião Ômega', role: 'corretor' },
+  { email: 'smachadoneto@gmail.com', name: 'Sebastião Ômega', role: 'admin' },
   { email: 'mariojunior2806@gmail.com', name: 'Mário Júnior', role: 'corretor' },
   { email: 'johny_nef@hotmail.com', name: 'Johny Henrique Ribeiro de Sousa', role: 'corretor' },
 ]

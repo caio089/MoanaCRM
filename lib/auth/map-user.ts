@@ -6,6 +6,8 @@ const VALID_ROLES = new Set<UserRole>(['admin', 'coordenador', 'corretor'])
 /** Aliases legados → papel canônico. */
 const ROLE_ALIASES: Record<string, UserRole> = {
   admin: 'admin',
+  gerente: 'admin',
+  gestor: 'admin',
   coordenador: 'coordenador',
   supervisor: 'coordenador',
   corretor: 'corretor',
