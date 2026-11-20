@@ -15,6 +15,34 @@ type SessionPayload = {
 
 type AuthListener = (event: string, session: SessionPayload['data']['session']) => void
 
+let sessionRefreshPromise: Promise<AuthUser | null> | null = null
+
+/**
+ * Atualiza o JWT ao restaurar a sessão para refletir mudanças administrativas
+ * recentes em app_metadata (por exemplo, promoção de corretor para admin).
+ * A promessa compartilhada evita várias rotações simultâneas do refresh token
+ * quando diferentes componentes montam o hook de autenticação ao mesmo tempo.
+ */
+function getRefreshedAuthUser(): Promise<AuthUser | null> {
+  if (!sessionRefreshPromise) {
+    sessionRefreshPromise = (async () => {
+      const client = createClient()
+      const { data: refreshed, error } = await client.auth.refreshSession()
+
+      if (!error && refreshed.user) {
+        return mapAuthUser(refreshed.user)
+      }
+
+      const { data } = await client.auth.getSession()
+      return mapAuthUser(data.session?.user)
+    })().finally(() => {
+      sessionRefreshPromise = null
+    })
+  }
+
+  return sessionRefreshPromise
+}
+
 const TABLE_ALIASES: Record<string, string> = {
   correspondentes: 'correspondentes_bancarios',
   admin_users: 'users',
@@ -290,9 +318,7 @@ export const supabase = {
   auth: {
     async getSession(): Promise<SessionPayload> {
       try {
-        const client = createClient()
-        const { data } = await client.auth.getSession()
-        const user = mapAuthUser(data.session?.user)
+        const user = await getRefreshedAuthUser()
         return { data: { session: user ? { user } : null } }
       } catch {
         return { data: { session: null } }
