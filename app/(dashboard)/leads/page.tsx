@@ -66,16 +66,18 @@ export default function LeadsPage() {
   })
 
   const refreshLeads = async () => {
-    const [{ leads: data, total }, counts] = await Promise.all([
+    const [{ leads: data, total }, counts, corretores] = await Promise.all([
       getLeadsWithFilters(filters, {
         page: currentPage,
         limit: ITEMS_PER_PAGE,
       }),
       countLeadsByEtapa(filters),
+      getTopByCorretor(undefined, filters, null),
     ])
     setLeads(data)
     setTotalLeads(total)
     setTotalCount(Object.values(counts).reduce((a: number, b: number) => a + b, 0))
+    setTopCorretores(corretores)
   }
 
   const handleAddSuccess = () => {
@@ -137,7 +139,7 @@ export default function LeadsPage() {
             limit: ITEMS_PER_PAGE,
           }),
           countLeadsByEtapa(filters),
-          getTopByCorretor(undefined, filters),
+          getTopByCorretor(undefined, filters, null),
           getTopByOrigem(undefined, filters),
           getTopByCidade(undefined, filters),
           getTimelineByEtapa(undefined, filters),
@@ -202,7 +204,7 @@ export default function LeadsPage() {
       <TimelineChart data={timelineData} title="Quantidade | Mês" height={300} />
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
-        <AnalysisCard title="Quantidade | Corretor" data={topCorretores} />
+        <AnalysisCard title="Quantidade | Corretor" data={topCorretores} limit={null} />
         <AnalysisCard title="Quantidade | Origem" data={topOrigens} />
         <AnalysisCard title="Quantidade | Cidade" data={topCidades} />
       </div>

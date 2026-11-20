@@ -7,12 +7,14 @@ interface AnalysisCardProps {
     value: number | string
   }>
   variant?: 'quantity' | 'currency'
+  limit?: number | null
 }
 
 export function AnalysisCard({
   title,
   data,
   variant = 'quantity',
+  limit = 5,
 }: AnalysisCardProps) {
   const max = Math.max(...data.map((d) => Number(d.value) || 0), 1)
 
@@ -25,7 +27,7 @@ export function AnalysisCard({
             Nenhum dado registrado
           </p>
         ) : (
-          data.slice(0, 5).map((item, idx) => (
+          data.slice(0, limit ?? undefined).map((item, idx) => (
             <div key={idx}>
               <div className="mb-1.5 flex items-center justify-between gap-3">
                 <span className="max-w-[68%] truncate text-label-md text-on-surface">{item.label}</span>

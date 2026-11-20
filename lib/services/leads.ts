@@ -97,10 +97,10 @@ function toRecord(rows: GroupRow[], metric: 'total' | 'vgv'): Record<string, num
   return Object.fromEntries(rows.map((row) => [row.label, row[metric]]))
 }
 
-function topN(rows: GroupRow[], metric: 'total' | 'vgv', limit = 5) {
+function topN(rows: GroupRow[], metric: 'total' | 'vgv', limit: number | null = 5) {
   return [...rows]
     .sort((a, b) => b[metric] - a[metric])
-    .slice(0, limit)
+    .slice(0, limit ?? undefined)
     .map((row) => ({ label: row.label, value: row[metric] }))
 }
 
@@ -207,7 +207,7 @@ export async function countByCorretor(etapa?: string, filters?: LeadsFilters) {
 }
 
 // Obter Top N por categoria
-async function getTopByField(field: GroupField, etapa?: string, filters?: LeadsFilters, limit: number = 5) {
+async function getTopByField(field: GroupField, etapa?: string, filters?: LeadsFilters, limit: number | null = 5) {
   try {
     return topN(await groupLeads(field, filters, etapa), 'total', limit)
   } catch (error) {
@@ -216,8 +216,8 @@ async function getTopByField(field: GroupField, etapa?: string, filters?: LeadsF
   }
 }
 
-export async function getTopByCorretor(etapa?: string, filters?: LeadsFilters) {
-  return getTopByField('corretor', etapa, filters)
+export async function getTopByCorretor(etapa?: string, filters?: LeadsFilters, limit?: number | null) {
+  return getTopByField('corretor', etapa, filters, limit)
 }
 
 export async function getTopByOrigem(etapa?: string, filters?: LeadsFilters) {
